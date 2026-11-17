@@ -10,7 +10,9 @@ Live: https://ffgroup-8.github.io/melodream/
 
 Open the link, or open `index.html` in a browser (Chrome, Safari, Edge or Firefox). No install and no build step. Images you upload never leave the browser.
 
-**Recipes** along the top are complete looks. **Shuffle colors** makes a new brand-safe combination. The four tabs are the layers, bottom to top:
+A new photo always opens untouched, so you see it as it is before changing anything. **Recipes** along the top are complete looks, **Original** takes the photo back to untouched, and **Shuffle colors** makes a new brand-safe combination. Once a photo has been changed, press and hold **Hold to see original** above the image to compare.
+
+The four tabs are the layers, bottom to top:
 
 1. **Image**: the background. A photo (upload one, or search Unsplash), a solid brand color, a two-tone blend, or transparent. Pick a frame shape and drag the image to reframe it. *Dream* blurs, streaks and liquifies it, from crystal clear to fully abstract.
 2. **Color**: a brand color layer over the background. A gradient with draggable color dots, a two-tone blend, a solid color, or a tone map that recolors the image by brightness. The gradient library has ready-made starting points. The blend mode decides how color meets the image.
@@ -21,7 +23,7 @@ Open the link, or open `index.html` in a browser (Chrome, Safari, Edge or Firefo
 
 ## Unsplash search
 
-Search needs a free Unsplash access key (https://unsplash.com/developers). Paste it into `UNSPLASH_ACCESS_KEY` near the top of the script to switch search on for everyone who opens the tool. Left empty, the tool asks each person for a key and keeps it in their own browser.
+Search runs on a free Unsplash access key, set in `UNSPLASH_ACCESS_KEY` near the top of the script. The free tier allows 50 searches an hour, shared by everyone using the tool; Unsplash raises that to 5,000 at no cost if the app is approved for production (https://unsplash.com/developers). If the key is removed, the tool asks each person for their own and keeps it in their browser.
 
 ## Change the brand palette
 

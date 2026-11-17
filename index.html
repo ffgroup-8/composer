@@ -223,13 +223,20 @@
     pointer-events: none;
   }
   .credit { position: absolute; bottom: 42px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--muted); }
+  .compare {
+    position: absolute; top: 14px; right: 18px; z-index: 4; user-select: none; -webkit-user-select: none; touch-action: none;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: var(--raise); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 13px; cursor: pointer;
+  }
+  .compare:hover { border-color: var(--muted); }
+  .compare.on { background: var(--text); color: var(--bg); border-color: var(--text); }
   .badge {
     position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; white-space: nowrap;
   }
   .toast {
-    position: absolute; top: 18px; right: 18px; background: var(--raise); border: 1px solid var(--line-2);
+    position: absolute; top: 58px; right: 18px; background: var(--raise); border: 1px solid var(--line-2);
     border-radius: 10px; padding: 10px 14px; font-size: 13px; max-width: 320px; opacity: 0;
     transform: translateY(-6px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 10;
   }
@@ -395,7 +402,8 @@
 </aside>
 
 <main class="stage" id="stage">
-  <div class="badge" id="badge">Sample scene · drop your own photo anywhere</div>
+  <div class="badge" id="badge"></div>
+  <button class="compare" id="compare" hidden>Hold to see original</button>
   <div id="frame">
     <canvas id="gl"></canvas>
     <div id="handles"></div>
@@ -421,9 +429,9 @@ const BRAND = {
   gray: ['#FFFFFF','#E7E7E7','#CDCDCD','#B6B6B6','#9D9D9D','#868686','#707070','#5A5A5A','#444648','#2C2E2F','#1C2023','#0B0F12'],
 };
 
-/* Unsplash search. Paste the access key here to switch search on for everyone;
-   left empty, the tool asks for a key and keeps it in that browser only. */
-const UNSPLASH_ACCESS_KEY = '';
+/* Unsplash search (free tier: 50 searches an hour, shared by everyone on the link).
+   If this is left empty, the tool asks for a key and keeps it in that browser only. */
+const UNSPLASH_ACCESS_KEY = 'FXsr0FiMyN4XdpS7y0TBFnELt5dlE7g0cdJn6ACOlkY';
 
 const STEP_LABELS = [50,100,200,300,400,500,600,700,800,900];
 const COLOR_NAMES = {};
@@ -433,31 +441,33 @@ const col = (scale, step) => BRAND.scales.find(s => s.name === scale).steps[STEP
 const gray = n => BRAND.gray[n - 1];
 
 /* ---------- Recipes: full looks built only from brand colors ---------- */
-const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55 };
+const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, bright: 0, contrast: 0, sat: 0 };
+/* The untouched photo: every effect off. New photos open in this state. */
+const ORIGINAL = { blur: 0, motion: 0, liquify: 0, overlay: 'off', pattern: 'off', grain: 0, bright: 0, contrast: 0, sat: 0 };
 const RECIPES = {
   Tide: {
     overlay: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
-    blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, grain: 22, grainSize: 30,
+    blur: 55, motion: 45, angle: 60, liquify: 0, grain: 22, grainSize: 30,
     stops: [ {c: gray(2), x: .06, y: .08}, {c: col('Orange',500), x: .14, y: .44}, {c: col('Blue',500), x: .5, y: .84}, {c: col('Burgundy',400), x: 1.0, y: .6} ],
   },
   Ember: {
     overlay: 'mesh', blend: 'overlay', opacity: 90, soft: 50, gflow: 30,
-    blur: 70, motion: 20, angle: 120, liquify: 30, liqScale: 35, grain: 28, grainSize: 35,
+    blur: 70, motion: 20, angle: 120, liquify: 30, grain: 28, grainSize: 35,
     stops: [ {c: gray(1), x: .05, y: .06}, {c: col('Orange',500), x: .88, y: .04}, {c: col('Burgundy',700), x: .8, y: .52}, {c: col('Teal',600), x: .04, y: .98} ],
   },
   Lagoon: {
     overlay: 'mesh', blend: 'softlight', opacity: 100, soft: 60, gflow: 40,
-    blur: 65, motion: 0, angle: 45, liquify: 45, liqScale: 30, grain: 24, grainSize: 30,
+    blur: 65, motion: 0, angle: 45, liquify: 70, grain: 24, grainSize: 30,
     stops: [ {c: col('Teal',300), x: .2, y: .2}, {c: col('Blue',500), x: .76, y: .7}, {c: gray(1), x: .92, y: .08}, {c: col('Teal',800), x: .08, y: .92} ],
   },
   Afterglow: {
     overlay: 'tone', blend: 'normal', opacity: 100,
-    blur: 60, motion: 30, angle: 20, liquify: 20, liqScale: 40, grain: 30, grainSize: 40,
+    blur: 60, motion: 30, angle: 20, liquify: 20, grain: 30, grainSize: 40,
     stops: [ {c: col('Burgundy',900), x: .1, y: .9}, {c: col('Burgundy',600), x: .4, y: .6}, {c: col('Orange',500), x: .6, y: .4}, {c: col('Orange',200), x: .8, y: .2}, {c: col('Orange',50), x: .9, y: .1} ],
   },
   Mist: {
     overlay: 'mesh', blend: 'screen', opacity: 85, soft: 65, gflow: 35,
-    blur: 85, motion: 0, angle: 45, liquify: 25, liqScale: 25, grain: 35, grainSize: 30,
+    blur: 85, motion: 0, angle: 45, liquify: 25, grain: 35, grainSize: 30,
     stops: [ {c: gray(1), x: .08, y: .5}, {c: col('Blue',200), x: .62, y: .62}, {c: col('Teal',200), x: .92, y: .08}, {c: col('Orange',100), x: .3, y: .04} ],
   },
   Signal: {
@@ -515,7 +525,6 @@ const SLIDERS = {
     { key: 'motion', label: 'Motion', min: 0, max: 100 },
     { key: 'angle', label: 'Motion angle', min: 0, max: 180, unit: '°' },
     { key: 'liquify', label: 'Liquify', min: 0, max: 100 },
-    { key: 'liqScale', label: 'Liquify detail', min: 0, max: 100 },
   ],
   overlay: [
     { key: 'soft', label: 'Softness', min: 0, max: 100, show: s => s.overlay === 'mesh' },
@@ -542,7 +551,7 @@ const state = {
   bg: 'photo', bgA: col('Blue',900), bgB: col('Teal',700), bgAngle: 45,
   aspect: 'Original', zoom: 100, cx: .5, cy: .5,
   bright: 0, contrast: 0, sat: 0,
-  blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, seed: 7.3,
+  blur: 55, motion: 45, angle: 60, liquify: 0, seed: 7.3,
   overlay: 'mesh', stops: [], soft: 55, gflow: 25, ovAngle: 45,
   blend: 'screen', opacity: 100,
   pattern: 'off', patColor: gray(1), patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
@@ -849,8 +858,9 @@ function hexToOklab(hex) {
 const dirOf = deg => [Math.cos(deg * Math.PI / 180), Math.sin(deg * Math.PI / 180)];
 
 function draw(outW, outH) {
-  const long = Math.max(outW, outH), none = state.bg === 'none';
-  const sigmaOut = none ? 0 : Math.pow(state.blur / 100, 2) * 0.07 * long;
+  const s = peek ? { ...state, ...ORIGINAL } : state;
+  const long = Math.max(outW, outH), none = s.bg === 'none';
+  const sigmaOut = none ? 0 : Math.pow(s.blur / 100, 2) * 0.07 * long;
   const d = Math.max(1, sigmaOut / 8);
   const ww = none ? 8 : Math.max(8, Math.round(outW / d)), wh = none ? 8 : Math.max(8, Math.round(outH / d));
   ensureTargets(ww, wh, floatOK && d > 1.5);
@@ -865,12 +875,12 @@ function draw(outW, outH) {
   const aspX = outW / long, aspY = outH / long;
 
   if (!none) {
-    const [fx, fy] = visibleFrac(), bd = dirOf(state.bgAngle);
+    const [fx, fy] = visibleFrac(), bd = dirOf(s.bgAngle);
     pass(progs.base, cur, ww, wh, srcTex, u => {
-      gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), state.cx, state.cy); gl.uniform2f(u('uFrac'), fx, fy);
-      gl.uniform1f(u('uBright'), state.bright / 100); gl.uniform1f(u('uContrast'), state.contrast / 100); gl.uniform1f(u('uSat'), state.sat / 100);
-      gl.uniform1i(u('uBg'), state.bg === 'photo' ? 0 : state.bg === 'solid' ? 1 : 2);
-      gl.uniform3fv(u('uBgA'), hexToOklab(state.bgA)); gl.uniform3fv(u('uBgB'), hexToOklab(state.bgB));
+      gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), s.cx, s.cy); gl.uniform2f(u('uFrac'), fx, fy);
+      gl.uniform1f(u('uBright'), s.bright / 100); gl.uniform1f(u('uContrast'), s.contrast / 100); gl.uniform1f(u('uSat'), s.sat / 100);
+      gl.uniform1i(u('uBg'), s.bg === 'photo' ? 0 : s.bg === 'solid' ? 1 : 2);
+      gl.uniform3fv(u('uBgA'), hexToOklab(s.bgA)); gl.uniform3fv(u('uBgB'), hexToOklab(s.bgB));
       gl.uniform2f(u('uAsp'), aspX, aspY); gl.uniform2f(u('uBgDir'), bd[0], bd[1]);
     });
     const sigmaW = sigmaOut / d;
@@ -880,8 +890,8 @@ function draw(outW, outH) {
         swap();
       }
     }
-    if (state.motion > 0) {
-      const len = Math.pow(state.motion / 100, 1.6) * 0.4 * long, a = state.angle * Math.PI / 180;
+    if (s.motion > 0) {
+      const len = Math.pow(s.motion / 100, 1.6) * 0.22 * long, a = s.angle * Math.PI / 180;
       const sx = Math.cos(a) * len / outW, sy = Math.sin(a) * len / outH;
       for (const k of [1, 1 / 24]) {
         pass(progs.motion, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uSpan'), sx * k, sy * k); });
@@ -890,25 +900,25 @@ function draw(outW, outH) {
     }
   }
 
-  const n = state.stops.length, cols = new Float32Array(15), pos = new Float32Array(10), od = dirOf(state.ovAngle);
-  state.stops.forEach((s, i) => { cols.set(hexToOklab(s.c), i * 3); pos[i * 2] = s.x; pos[i * 2 + 1] = 1 - s.y; });
+  const n = s.stops.length, cols = new Float32Array(15), pos = new Float32Array(10), od = dirOf(s.ovAngle);
+  s.stops.forEach((s, i) => { cols.set(hexToOklab(s.c), i * 3); pos[i * 2] = s.x; pos[i * 2 + 1] = 1 - s.y; });
   gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   pass(progs.comp, null, outW, outH, cur.tex, u => {
     gl.uniform1i(u('uBase'), 0); gl.uniform2f(u('uRes'), outW, outH); gl.uniform1i(u('uBgNone'), none ? 1 : 0);
-    gl.uniform1f(u('uLiq'), Math.pow(state.liquify / 100, 1.5) * 0.9); gl.uniform1f(u('uLiqScale'), state.liqScale / 100); gl.uniform1f(u('uSeed'), state.seed);
-    gl.uniform1i(u('uOvMode'), OV_INDEX[state.overlay]); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[state.blend]);
+    gl.uniform1f(u('uLiq'), Math.pow(s.liquify / 100, 1.3) * 0.22); gl.uniform1f(u('uLiqScale'), 0.3); gl.uniform1f(u('uSeed'), s.seed);
+    gl.uniform1i(u('uOvMode'), OV_INDEX[s.overlay]); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[s.blend]);
     gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos); gl.uniform2f(u('uOvDir'), od[0], od[1]);
-    gl.uniform1f(u('uSoft'), state.soft / 100); gl.uniform1f(u('uGFlow'), state.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), state.opacity / 100);
-    gl.uniform1f(u('uGrain'), state.grain / 100 * 0.6); gl.uniform1f(u('uGrainCells'), 1800 - state.grainSize / 100 * 1400);
-    gl.uniform1i(u('uPat'), PAT_INDEX[state.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[state.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[state.patBlend]);
-    gl.uniform3fv(u('uPatCol'), hexToRgb(state.patColor));
-    gl.uniform1f(u('uPatN'), 5 + Math.pow(state.patScale / 100, 1.6) * 115); gl.uniform1f(u('uPatSize'), state.patSize / 100);
-    gl.uniform1f(u('uPatRot'), state.patAngle * Math.PI / 180); gl.uniform1f(u('uPatFlow'), state.patFlow / 100 * 0.25);
-    gl.uniform1f(u('uPatVary'), state.patVary / 100); gl.uniform1f(u('uPatOpacity'), state.patOpacity / 100);
+    gl.uniform1f(u('uSoft'), s.soft / 100); gl.uniform1f(u('uGFlow'), s.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), s.opacity / 100);
+    gl.uniform1f(u('uGrain'), s.grain / 100 * 0.4); gl.uniform1f(u('uGrainCells'), 1800 - s.grainSize / 100 * 1400);
+    gl.uniform1i(u('uPat'), PAT_INDEX[s.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[s.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[s.patBlend]);
+    gl.uniform3fv(u('uPatCol'), hexToRgb(s.patColor));
+    gl.uniform1f(u('uPatN'), 5 + Math.pow(s.patScale / 100, 1.6) * 115); gl.uniform1f(u('uPatSize'), s.patSize / 100);
+    gl.uniform1f(u('uPatRot'), s.patAngle * Math.PI / 180); gl.uniform1f(u('uPatFlow'), s.patFlow / 100 * 0.25);
+    gl.uniform1f(u('uPatVary'), s.patVary / 100); gl.uniform1f(u('uPatOpacity'), s.patOpacity / 100);
   });
 }
 
-let dirty = false, busy = false;
+let dirty = false, busy = false, peek = false;
 function invalidate() { if (dirty) return; dirty = true; requestAnimationFrame(() => { dirty = false; if (!busy && gl) draw(canvas.width, canvas.height); }); }
 
 /* ---------- Layout: fit the frame to the stage at the chosen aspect ---------- */
@@ -931,7 +941,7 @@ function setSource(drawable, w, h, name, credit) {
   sourceCanvas.getContext('2d').drawImage(drawable, 0, 0, sourceCanvas.width, sourceCanvas.height);
   src.w = sourceCanvas.width; src.h = sourceCanvas.height;
   uploadSource(); state.cx = state.cy = .5; state.zoom = 100;
-  if (name) { $('fileName').textContent = name; $('badge').hidden = true; state.bg = 'photo'; }
+  if (name) { $('fileName').textContent = name; Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); }
   const cr = $('credit'); cr.hidden = !credit; cr.innerHTML = credit || '';
   syncUI(); layout();
 }
@@ -1052,7 +1062,16 @@ async function exportImage() {
 /* ---------- UI ---------- */
 let toastTimer;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
-function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); }
+function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); syncStage(); }
+/* Stage messages: what is on screen, and the hold-to-compare button once a photo has been changed. */
+function syncStage() {
+  const photo = state.bg === 'photo', original = state.recipe === 'Original', sample = $('fileName').textContent === 'Sample scene';
+  const badge = $('badge');
+  badge.textContent = original ? 'Original photo · pick a recipe or adjust a control to begin' : 'Sample scene · upload or search for your own photo';
+  badge.hidden = !photo || !(original || sample);
+  $('compare').hidden = !photo || original;
+}
+function applyOriginal() { Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); syncUI(); layout(); }
 function changed() { custom(); syncUI(); invalidate(); }
 
 function buildPalette(host, current, onPick) {
@@ -1112,6 +1131,11 @@ function buildUI() {
     }
   }
   const rec = $('recipes');
+  const og = document.createElement('button'); og.className = 'chip'; og.textContent = 'Original'; og.dataset.recipe = 'Original';
+  og.onclick = applyOriginal; rec.appendChild(og);
+  const cmp = $('compare'), setPeek = on => { if (peek === on) return; peek = on; cmp.classList.toggle('on', on); $('handles').style.visibility = on ? 'hidden' : ''; invalidate(); };
+  cmp.addEventListener('pointerdown', e => { e.preventDefault(); cmp.setPointerCapture(e.pointerId); setPeek(true); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cmp.addEventListener(t, () => setPeek(false)));
   for (const name of Object.keys(RECIPES)) {
     const b = document.createElement('button'); b.className = 'chip'; b.textContent = name; b.dataset.recipe = name;
     b.onclick = () => applyRecipe(name); rec.appendChild(b);
@@ -1244,7 +1268,7 @@ function syncUI() {
 
   $('bgPhoto').hidden = !photo; $('bgSolid').hidden = s.bg !== 'solid'; $('bgLinear').hidden = s.bg !== 'linear'; $('bgNone').hidden = !none;
   $('toneBox').hidden = !photo; $('dreamGroup').hidden = none || s.bg === 'solid';
-  $('badge').hidden = !photo || $('fileName').textContent !== 'Sample scene';
+  syncStage();
   $('credit').hidden = !photo || !$('credit').innerHTML;
 
   $('ovBody').hidden = s.overlay === 'off' || none; $('libBox').hidden = s.overlay === 'tone' || s.overlay === 'solid';
