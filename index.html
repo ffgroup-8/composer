@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Melotic Dream Sequence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F12;
+    --panel: #121619;
+    --raise: #1C2023;
+    --line: #2C2E2F;
+    --line-2: #444648;
+    --text: #E7E7E7;
+    --muted: #868686;
+    --accent: #F06743;
+    --accent-hover: #F27C5F;
+    --sans: "Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 14px; line-height: 1.4;
+    display: grid; grid-template-columns: 372px minmax(0, 1fr);
+    overflow: hidden;
+  }
+  button, select, input { font: inherit; color: inherit; }
+
+  /* ---------- Panel ---------- */
+  .panel {
+    background: var(--panel); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; min-height: 0; height: 100vh;
+  }
+  .panel-scroll { overflow-y: auto; flex: 1; min-height: 0; padding: 28px 24px 12px; }
+  .panel-scroll::-webkit-scrollbar { width: 8px; }
+  .panel-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  .brand .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .brand h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; margin-top: 6px; }
+  .brand p { color: var(--muted); margin-top: 6px; font-size: 13px; }
+
+  .group { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; }
+  .group > h2 {
+    font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--text); margin-bottom: 16px;
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  .group > h2 span { color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12px; margin: -6px 0 14px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--line-2); color: var(--text);
+    border-radius: 999px; padding: 6px 11px; cursor: pointer; transition: background .12s, border-color .12s;
+  }
+  .chip:hover { border-color: var(--muted); }
+  .chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .chip.accent { border-color: var(--accent); color: var(--accent); }
+  .chip.accent:hover { background: var(--accent); color: var(--bg); }
+
+  .row { margin-bottom: 14px; }
+  .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .row-head label { font-size: 13px; }
+  .row-head output { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 18px;
+    background: transparent; cursor: pointer; display: block;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--line-2); border-radius: 1px; }
+  input[type="range"]::-moz-range-track { height: 2px; background: var(--line-2); border-radius: 1px; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--text); border: 0; margin-top: -6px; transition: transform .1s;
+  }
+  input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--text); border: 0; }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
+  input[type="range"]:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+  .btn {
+    background: var(--raise); border: 1px solid var(--line-2); border-radius: 8px;
+    padding: 9px 14px; cursor: pointer; font-size: 13px; transition: border-color .12s, background .12s;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.small { padding: 6px 10px; font-size: 12px; }
+  .file-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .file-name { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .link { color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+  .link:hover { color: var(--text); }
+  .sub { font-size: 12px; color: var(--muted); margin: 14px 0 8px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  details { margin-top: 4px; }
+  details summary {
+    cursor: pointer; font-size: 12px; color: var(--muted); list-style: none; margin-bottom: 12px;
+    font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "+ "; }
+  details[open] summary::before { content: "– "; }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .seg button { background: transparent; border: 0; padding: 8px 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+  .stops { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .stop {
+    width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--panel);
+    outline: 1px solid var(--line-2); cursor: pointer; position: relative; padding: 0;
+  }
+  .stop[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .stop .x {
+    position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--line-2); color: var(--text);
+    font-size: 10px; line-height: 14px; text-align: center; display: none;
+  }
+  .stop[aria-pressed="true"] .x { display: block; }
+  .stop-add {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px dashed var(--line-2);
+    background: transparent; cursor: pointer; color: var(--muted); font-size: 18px;
+  }
+  .stop-add:hover { border-color: var(--text); color: var(--text); }
+  .stop-name { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 12px; min-height: 16px; }
+
+  .palette { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 18px; }
+  .scale { display: grid; gap: 3px; margin-bottom: 3px; }
+  .scale:last-child { margin-bottom: 0; }
+  .scale.ten { grid-template-columns: repeat(10, 1fr); }
+  .scale.twelve { grid-template-columns: repeat(12, 1fr); margin-top: 8px; }
+  .sw { aspect-ratio: 1; border: 0; border-radius: 4px; cursor: pointer; padding: 0; position: relative; }
+  .sw:hover { transform: scale(1.12); z-index: 1; }
+  .sw[aria-pressed="true"]::after {
+    content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--text); border-radius: 6px;
+  }
+
+  select {
+    width: 100%; background: var(--raise); border: 1px solid var(--line-2); border-radius: 8px;
+    padding: 8px 10px; font-size: 13px; cursor: pointer;
+  }
+
+  .export {
+    border-top: 1px solid var(--line); padding: 16px 24px 20px; background: var(--panel);
+  }
+  .export-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .export-dim { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .export-btn {
+    width: 100%; background: var(--accent); color: #0B0F12; border: 0; border-radius: 10px;
+    padding: 13px 16px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background .12s;
+  }
+  .export-btn:hover { background: var(--accent-hover); }
+  .export-btn:disabled { opacity: .6; cursor: progress; }
+
+  /* ---------- Stage ---------- */
+  .stage { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100vh; }
+  .stage.dragover::after {
+    content: "Drop image to load"; position: absolute; inset: 20px; border: 1.5px dashed var(--accent);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px;
+    color: var(--accent); background: rgba(11,15,18,.72); z-index: 5; pointer-events: none;
+  }
+  #frame { position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.55); cursor: grab; touch-action: none; }
+  #frame.panning { cursor: grabbing; }
+  #frame canvas { width: 100%; height: 100%; display: block; }
+  #handles { position: absolute; inset: 0; pointer-events: none; }
+  .handle {
+    position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+    border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+    pointer-events: auto; cursor: move; touch-action: none; transition: transform .1s;
+  }
+  .handle:hover, .handle.active { transform: scale(1.25); }
+  .stage-note {
+    position: absolute; bottom: 18px; left: 0; right: 0; text-align: center;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    pointer-events: none;
+  }
+  .badge {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+  }
+  .toast {
+    position: absolute; top: 18px; right: 18px; background: var(--raise); border: 1px solid var(--line-2);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; max-width: 320px; opacity: 0;
+    transform: translateY(-6px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 10;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  @media (max-width: 860px) {
+    body { grid-template-columns: 1fr; grid-template-rows: 46vh 1fr; overflow: auto; }
+    .stage { height: 46vh; order: -1; }
+    .panel { height: auto; border-right: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<aside class="panel">
+  <div class="panel-scroll">
+    <div class="brand">
+      <div class="eyebrow">Melotic</div>
+      <h1>Dream Sequence</h1>
+      <p>Brand-safe imagery from any photograph.</p>
+    </div>
+
+    <section class="group">
+      <h2><span>00</span> Recipes</h2>
+      <div class="chips" id="recipes"></div>
+    </section>
+
+    <section class="group">
+      <h2><span>01</span> Source</h2>
+      <div class="file-row">
+        <button class="btn" id="pick">Choose image</button>
+        <span class="file-name" id="fileName">Sample scene</span>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+      <a class="link" href="https://unsplash.com" target="_blank" rel="noopener">Find a royalty-free photo on Unsplash</a>
+      <div class="sub">Frame</div>
+      <div class="chips" id="aspects" style="margin-bottom:16px"></div>
+      <div data-sliders="source"></div>
+      <details>
+        <summary>Photo tone</summary>
+        <div data-sliders="tone"></div>
+      </details>
+    </section>
+
+    <section class="group">
+      <h2><span>02</span> Dream</h2>
+      <div data-sliders="dream"></div>
+      <button class="btn small" id="reseed">New liquid pattern</button>
+    </section>
+
+    <section class="group">
+      <h2><span>03</span> Color</h2>
+      <div class="seg" id="gradMode">
+        <button data-mode="mesh">Gradient</button>
+        <button data-mode="tone">Tone map</button>
+      </div>
+      <p class="hint" id="colorHint"></p>
+      <div class="stops" id="stops"></div>
+      <div class="stop-name" id="stopName"></div>
+      <div class="palette" id="palette"></div>
+      <div data-sliders="mesh"></div>
+      <div class="row">
+        <div class="row-head"><label for="blend">Blend mode</label></div>
+        <select id="blend"></select>
+      </div>
+      <div data-sliders="blend"></div>
+    </section>
+
+    <section class="group">
+      <h2><span>04</span> Grain</h2>
+      <div data-sliders="grain"></div>
+    </section>
+  </div>
+
+  <div class="export">
+    <div class="export-row">
+      <select id="exportSize" aria-label="Export size"></select>
+      <span class="export-dim" id="exportDim"></span>
+    </div>
+    <button class="export-btn" id="exportBtn">Export JPG</button>
+  </div>
+</aside>
+
+<main class="stage" id="stage">
+  <div class="badge" id="badge">Sample scene · drop your own photo anywhere</div>
+  <div id="frame">
+    <canvas id="gl"></canvas>
+    <div id="handles"></div>
+  </div>
+  <div class="stage-note" id="stageNote">Drag the image to reframe · Drag a dot to move its color</div>
+  <div class="toast" id="toast" role="status"></div>
+</main>
+
+<script>
+/* =====================================================================
+   BRAND PALETTE (provisional)
+   The only colors this tool can produce. Swap these values when the
+   master brand library is finalized; nothing else needs to change.
+   ===================================================================== */
+const BRAND = {
+  scales: [
+    { name: 'Burgundy', steps: ['#FAEEF2','#F1D9E1','#E2B2C2','#CC8BA1','#B1627D','#8E3C57','#6F2440','#520E25','#3F0A1C','#280611'] },
+    { name: 'Orange',   steps: ['#FEF3F0','#FDE3DA','#F8C4B3','#F1957D','#F27C5F','#F06743','#C94A2A','#A33A20','#782B18','#4F1C10'] },
+    { name: 'Teal',     steps: ['#F1F8F8','#DEEEED','#B8DBD8','#9DCECB','#82C0BE','#65AFAB','#519F9B','#3E817C','#2C5E5D','#1C3F3E'] },
+    { name: 'Blue',     steps: ['#EFF4FD','#D5E4F8','#AECCF1','#7FAAE7','#4F88DB','#256ECC','#1F5FB2','#1B5298','#133464','#0D2141'] },
+  ],
+  gray: ['#FFFFFF','#E7E7E7','#CDCDCD','#B6B6B6','#9D9D9D','#868686','#707070','#5A5A5A','#444648','#2C2E2F','#1C2023','#0B0F12'],
+};
+const STEP_LABELS = [50,100,200,300,400,500,600,700,800,900];
+const COLOR_NAMES = {};
+BRAND.scales.forEach(s => s.steps.forEach((h, i) => COLOR_NAMES[h] = s.name + ' ' + STEP_LABELS[i]));
+BRAND.gray.forEach((h, i) => COLOR_NAMES[h] = 'Grayscale ' + (i + 1));
+const col = (scale, step) => BRAND.scales.find(s => s.name === scale).steps[STEP_LABELS.indexOf(step)];
+const gray = n => BRAND.gray[n - 1];
+
+/* ---------- Recipes: starting points built only from brand colors ---------- */
+const RECIPES = {
+  Tide: {
+    gradMode: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
+    blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, grain: 22, grainSize: 30,
+    stops: [ {c: gray(2), x: .06, y: .08}, {c: col('Orange',500), x: .14, y: .44}, {c: col('Blue',500), x: .5, y: .84}, {c: col('Burgundy',400), x: 1.0, y: .6} ],
+  },
+  Ember: {
+    gradMode: 'mesh', blend: 'overlay', opacity: 90, soft: 50, gflow: 30,
+    blur: 70, motion: 20, angle: 120, liquify: 30, liqScale: 35, grain: 28, grainSize: 35,
+    stops: [ {c: gray(1), x: .05, y: .06}, {c: col('Orange',500), x: .88, y: .04}, {c: col('Burgundy',700), x: .8, y: .52}, {c: col('Teal',600), x: .04, y: .98} ],
+  },
+  Lagoon: {
+    gradMode: 'mesh', blend: 'softlight', opacity: 100, soft: 60, gflow: 40,
+    blur: 65, motion: 0, angle: 45, liquify: 45, liqScale: 30, grain: 24, grainSize: 30,
+    stops: [ {c: col('Teal',300), x: .2, y: .2}, {c: col('Blue',500), x: .76, y: .7}, {c: gray(1), x: .92, y: .08}, {c: col('Teal',800), x: .08, y: .92} ],
+  },
+  Afterglow: {
+    gradMode: 'tone', blend: 'normal', opacity: 100, soft: 50, gflow: 0,
+    blur: 60, motion: 30, angle: 20, liquify: 20, liqScale: 40, grain: 30, grainSize: 40,
+    stops: [ {c: col('Burgundy',900), x: .1, y: .9}, {c: col('Burgundy',600), x: .4, y: .6}, {c: col('Orange',500), x: .6, y: .4}, {c: col('Orange',200), x: .8, y: .2}, {c: col('Orange',50), x: .9, y: .1} ],
+  },
+  Mist: {
+    gradMode: 'mesh', blend: 'screen', opacity: 85, soft: 65, gflow: 35,
+    blur: 85, motion: 0, angle: 45, liquify: 25, liqScale: 25, grain: 35, grainSize: 30,
+    stops: [ {c: gray(1), x: .08, y: .5}, {c: col('Blue',200), x: .62, y: .62}, {c: col('Teal',200), x: .92, y: .08}, {c: col('Orange',100), x: .3, y: .04} ],
+  },
+};
+
+const ASPECTS = { 'Original': null, '16:9': 16/9, '3:2': 3/2, '1:1': 1, '4:5': 4/5, '9:16': 9/16 };
+const BLENDS = [ ['overlay','Overlay'], ['softlight','Soft Light'], ['hardlight','Hard Light'], ['screen','Screen'], ['multiply','Multiply'], ['lighten','Lighten'], ['darken','Darken'], ['color','Color'], ['normal','Normal'] ];
+const BLEND_INDEX = { normal: 0, overlay: 1, softlight: 2, hardlight: 3, screen: 4, multiply: 5, lighten: 6, darken: 7, color: 8 };
+const EXPORT_SIZES = [ [2400, 'Web · 2400 px'], [4000, 'Large · 4000 px'], [6000, 'Print · 6000 px'] ];
+
+const SLIDERS = {
+  source: [ { key: 'zoom', label: 'Zoom', min: 100, max: 300, unit: '%' } ],
+  tone: [
+    { key: 'bright', label: 'Brightness', min: -100, max: 100 },
+    { key: 'contrast', label: 'Contrast', min: -100, max: 100 },
+    { key: 'sat', label: 'Saturation', min: -100, max: 100 },
+  ],
+  dream: [
+    { key: 'blur', label: 'Blur', min: 0, max: 100 },
+    { key: 'motion', label: 'Motion', min: 0, max: 100 },
+    { key: 'angle', label: 'Motion angle', min: 0, max: 180, unit: '°' },
+    { key: 'liquify', label: 'Liquify', min: 0, max: 100 },
+    { key: 'liqScale', label: 'Liquify detail', min: 0, max: 100 },
+  ],
+  mesh: [
+    { key: 'soft', label: 'Softness', min: 0, max: 100, meshOnly: true },
+    { key: 'gflow', label: 'Flow', min: 0, max: 100, meshOnly: true },
+  ],
+  blend: [ { key: 'opacity', label: 'Opacity', min: 0, max: 100, unit: '%' } ],
+  grain: [
+    { key: 'grain', label: 'Amount', min: 0, max: 100 },
+    { key: 'grainSize', label: 'Size', min: 0, max: 100 },
+  ],
+};
+
+const state = {
+  aspect: 'Original', zoom: 100, cx: .5, cy: .5,
+  bright: 0, contrast: 0, sat: 0,
+  blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, seed: 7.3,
+  gradMode: 'mesh', stops: [], soft: 55, gflow: 25,
+  blend: 'screen', opacity: 100,
+  grain: 22, grainSize: 30,
+  exportSize: 4000, recipe: 'Tide', selected: 0,
+};
+
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const canvas = $('gl'), frame = $('frame'), stage = $('stage');
+
+/* =====================================================================
+   WebGL pipeline
+   base (crop + tone) -> gaussian blur -> motion blur -> composite
+   (liquify, brand gradient, blend, grain). Every distance is relative
+   to the output size, so the export matches the preview.
+   ===================================================================== */
+const VERT = `#version 300 es
+in vec2 aPos; out vec2 vUv;
+void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+const FRAG_BASE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform vec2 uCenter, uFrac;
+uniform float uBright, uContrast, uSat;
+void main(){
+  vec3 c = texture(uSrc, uCenter + (vUv - 0.5) * uFrac).rgb;
+  c += uBright * 0.35;
+  c = (c - 0.5) * (1.0 + uContrast) + 0.5;
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  c = mix(vec3(l), c, 1.0 + uSat);
+  o = vec4(clamp(c, 0.0, 1.0), 1.0);
+}`;
+
+const FRAG_GAUSS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform vec2 uDir; uniform float uSigma;
+void main(){
+  vec4 acc = texture(uTex, vUv); float ws = 1.0;
+  for (int i = 1; i <= 24; i++) {
+    float x = float(i); float w = exp(-0.5 * x * x / (uSigma * uSigma));
+    acc += (texture(uTex, vUv + uDir * x) + texture(uTex, vUv - uDir * x)) * w; ws += 2.0 * w;
+  }
+  o = acc / ws;
+}`;
+
+const FRAG_MOTION = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex; uniform vec2 uSpan;
+void main(){
+  vec4 acc = vec4(0.0);
+  for (int i = 0; i < 24; i++) { float t = (float(i) + 0.5) / 24.0 - 0.5; acc += texture(uTex, vUv + uSpan * t); }
+  o = acc / 24.0;
+}`;
+
+const FRAG_COMP = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uBase; uniform vec2 uRes;
+uniform float uLiq, uLiqScale, uSeed;
+uniform int uMode, uCount, uBlend;
+uniform vec3 uCol[5]; uniform vec2 uPos[5];
+uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells;
+
+float hash21(vec2 p){
+  uvec2 q = uvec2(ivec2(floor(p)) + ivec2(32768));
+  uint h = q.x * 1597334677u ^ q.y * 3812015801u;
+  h ^= h >> 16; h *= 2246822519u; h ^= h >> 13; h *= 3266489917u; h ^= h >> 16;
+  return float(h) * (1.0 / 4294967295.0);
+}
+float vnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p); vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  return mix(mix(hash21(i), hash21(i + vec2(1, 0)), u.x), mix(hash21(i + vec2(0, 1)), hash21(i + vec2(1, 1)), u.x), u.y);
+}
+float fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; } return s; }
+vec2 flow(vec2 p){ return vec2(fbm(p), fbm(p + vec2(41.3, 27.9))) - 0.47; }
+
+vec3 oklab2rgb(vec3 c){
+  float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
+  float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
+  float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
+  float l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+  vec3 lin = vec3( 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+                  -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+                  -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+  lin = clamp(lin, 0.0, 1.0);
+  return mix(12.92 * lin, 1.055 * pow(lin, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, lin));
+}
+
+float lum(vec3 c){ return dot(c, vec3(0.3, 0.59, 0.11)); }
+vec3 clipColor(vec3 c){
+  float l = lum(c), n = min(min(c.r, c.g), c.b), x = max(max(c.r, c.g), c.b);
+  if (n < 0.0) c = l + (c - l) * l / (l - n);
+  if (x > 1.0) c = l + (c - l) * (1.0 - l) / (x - l);
+  return c;
+}
+vec3 blend(vec3 b, vec3 s, int m){
+  if (m == 0) return s;
+  if (m == 1) return mix(2.0 * b * s, 1.0 - 2.0 * (1.0 - b) * (1.0 - s), step(0.5, b));
+  if (m == 2) { vec3 d = mix(((16.0 * b - 12.0) * b + 4.0) * b, sqrt(b), step(0.25, b));
+                return mix(b - (1.0 - 2.0 * s) * b * (1.0 - b), b + (2.0 * s - 1.0) * (d - b), step(0.5, s)); }
+  if (m == 3) return mix(2.0 * b * s, 1.0 - 2.0 * (1.0 - b) * (1.0 - s), step(0.5, s));
+  if (m == 4) return 1.0 - (1.0 - b) * (1.0 - s);
+  if (m == 5) return b * s;
+  if (m == 6) return max(b, s);
+  if (m == 7) return min(b, s);
+  return clipColor(s + (lum(b) - lum(s)));
+}
+
+void main(){
+  vec2 asp = uRes / max(uRes.x, uRes.y);
+  vec2 p = vUv * asp;
+
+  vec2 uvb = vUv;
+  if (uLiq > 0.0) {
+    vec2 q = p * mix(1.2, 7.0, uLiqScale) + uSeed * vec2(3.7, 1.9);
+    vec2 w1 = flow(q);
+    vec2 w2 = flow(q + 3.0 * w1 + vec2(5.2, 1.3));
+    uvb += (w2 * uLiq) / asp;
+  }
+  vec3 base = texture(uBase, uvb).rgb;
+
+  vec3 g;
+  if (uMode == 0) {
+    vec2 gp = p;
+    if (uGFlow > 0.0) { vec2 q = p * 1.6 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0); gp += flow(q + 2.0 * flow(q)) * uGFlow; }
+    float k = mix(3.6, 1.0, uSoft);
+    vec3 acc = vec3(0.0); float ws = 0.0;
+    for (int i = 0; i < 5; i++) {
+      if (i >= uCount) break;
+      vec2 d = gp - uPos[i] * asp; float w = 1.0 / pow(dot(d, d) + 0.002, k);
+      acc += uCol[i] * w; ws += w;
+    }
+    g = oklab2rgb(acc / ws);
+  } else {
+    float x = clamp(lum(base), 0.0, 1.0) * float(uCount - 1);
+    int i = min(int(floor(x)), uCount - 2);
+    g = oklab2rgb(mix(uCol[i], uCol[i + 1], x - float(i)));
+  }
+
+  vec3 c = mix(base, clamp(blend(base, g, uBlend), 0.0, 1.0), uOpacity);
+
+  if (uGrain > 0.0) {
+    vec2 gc = p * uGrainCells;
+    float n = (vnoise(gc + uSeed * 13.0) + vnoise(gc * 1.9 + 71.7)) * 0.5 - 0.5;
+    c += n * uGrain;
+  }
+  c += (hash21(gl_FragCoord.xy) - 0.5) / 255.0;
+  o = vec4(clamp(c, 0.0, 1.0), 1.0);
+}`;
+
+let gl, progs, floatOK, maxSize, srcTex, targets = { w: 0, h: 0, float: false, a: null, b: null };
+const sourceCanvas = document.createElement('canvas');
+const src = { w: 3, h: 2, loaded: false };
+
+function program(fragSrc) {
+  const mk = (type, s) => {
+    const sh = gl.createShader(type); gl.shaderSource(sh, s); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+    return sh;
+  };
+  const p = gl.createProgram();
+  gl.attachShader(p, mk(gl.VERTEX_SHADER, VERT)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fragSrc));
+  gl.bindAttribLocation(p, 0, 'aPos'); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const cache = {};
+  return { p, u: name => cache[name] ?? (cache[name] = gl.getUniformLocation(p, name)) };
+}
+
+function initGL() {
+  gl = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false });
+  if (!gl) { toast('This browser does not support WebGL2, which Dream Sequence needs.', 8000); return false; }
+  floatOK = !!gl.getExtension('EXT_color_buffer_float');
+  maxSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+  progs = { base: program(FRAG_BASE), gauss: program(FRAG_GAUSS), motion: program(FRAG_MOTION), comp: program(FRAG_COMP) };
+  const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  srcTex = gl.createTexture();
+  targets = { w: 0, h: 0, float: false, a: null, b: null };
+  return true;
+}
+
+function uploadSource() {
+  gl.bindTexture(gl.TEXTURE_2D, srcTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sourceCanvas);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+function makeTarget(w, h, useFloat) {
+  const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  if (useFloat) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+  const fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fbo };
+}
+function ensureTargets(w, h, useFloat) {
+  if (targets.w === w && targets.h === h && targets.float === useFloat) return;
+  for (const t of [targets.a, targets.b]) if (t) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
+  targets = { w, h, float: useFloat, a: makeTarget(w, h, useFloat), b: makeTarget(w, h, useFloat) };
+}
+
+function outAspect() { return ASPECTS[state.aspect] ?? (src.w / src.h); }
+function visibleFrac() {
+  const ai = src.w / src.h, ao = outAspect(); let fx = 1, fy = 1;
+  if (ai > ao) fx = ao / ai; else fy = ai / ao;
+  const z = state.zoom / 100; return [fx / z, fy / z];
+}
+function clampCenter() {
+  const [fx, fy] = visibleFrac();
+  state.cx = clamp(state.cx, fx / 2, 1 - fx / 2); state.cy = clamp(state.cy, fy / 2, 1 - fy / 2);
+}
+
+function hexToOklab(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const r = lin(n >> 16 & 255), g = lin(n >> 8 & 255), b = lin(n & 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+
+function draw(outW, outH) {
+  const long = Math.max(outW, outH);
+  const sigmaOut = Math.pow(state.blur / 100, 2) * 0.07 * long;
+  const d = Math.max(1, sigmaOut / 8);
+  const ww = Math.max(8, Math.round(outW / d)), wh = Math.max(8, Math.round(outH / d));
+  ensureTargets(ww, wh, floatOK && d > 1.5);
+  let cur = targets.a, other = targets.b;
+  const pass = (prog, target, w, h, inputTex, set) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fbo : null);
+    gl.viewport(0, 0, w, h); gl.useProgram(prog.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, inputTex);
+    set(prog.u); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+  const swap = () => { const t = cur; cur = other; other = t; };
+
+  const [fx, fy] = visibleFrac();
+  pass(progs.base, cur, ww, wh, srcTex, u => {
+    gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), state.cx, state.cy); gl.uniform2f(u('uFrac'), fx, fy);
+    gl.uniform1f(u('uBright'), state.bright / 100); gl.uniform1f(u('uContrast'), state.contrast / 100); gl.uniform1f(u('uSat'), state.sat / 100);
+  });
+
+  const sigmaW = sigmaOut / d;
+  if (sigmaW > 0.25) {
+    for (const dir of [[1 / ww, 0], [0, 1 / wh]]) {
+      pass(progs.gauss, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uDir'), dir[0], dir[1]); gl.uniform1f(u('uSigma'), sigmaW); });
+      swap();
+    }
+  }
+  if (state.motion > 0) {
+    const len = Math.pow(state.motion / 100, 1.6) * 0.4 * long, a = state.angle * Math.PI / 180;
+    const sx = Math.cos(a) * len / outW, sy = Math.sin(a) * len / outH;
+    for (const k of [1, 1 / 24]) {
+      pass(progs.motion, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uSpan'), sx * k, sy * k); });
+      swap();
+    }
+  }
+
+  const n = state.stops.length, cols = new Float32Array(15), pos = new Float32Array(10);
+  state.stops.forEach((s, i) => { cols.set(hexToOklab(s.c), i * 3); pos[i * 2] = s.x; pos[i * 2 + 1] = 1 - s.y; });
+  pass(progs.comp, null, outW, outH, cur.tex, u => {
+    gl.uniform1i(u('uBase'), 0); gl.uniform2f(u('uRes'), outW, outH);
+    gl.uniform1f(u('uLiq'), Math.pow(state.liquify / 100, 1.5) * 0.9); gl.uniform1f(u('uLiqScale'), state.liqScale / 100); gl.uniform1f(u('uSeed'), state.seed);
+    gl.uniform1i(u('uMode'), state.gradMode === 'mesh' ? 0 : 1); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[state.blend]);
+    gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos);
+    gl.uniform1f(u('uSoft'), state.soft / 100); gl.uniform1f(u('uGFlow'), state.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), state.opacity / 100);
+    gl.uniform1f(u('uGrain'), state.grain / 100 * 0.6); gl.uniform1f(u('uGrainCells'), 1800 - state.grainSize / 100 * 1400);
+  });
+}
+
+let dirty = false, busy = false;
+function invalidate() { if (dirty) return; dirty = true; requestAnimationFrame(() => { dirty = false; if (!busy && gl) draw(canvas.width, canvas.height); }); }
+
+/* ---------- Layout: fit the frame to the stage at the chosen aspect ---------- */
+function layout() {
+  const r = stage.getBoundingClientRect(), a = outAspect();
+  const aw = Math.max(120, r.width - 96), ah = Math.max(120, r.height - 132);
+  let w = aw, h = aw / a; if (h > ah) { h = ah; w = ah * a; }
+  frame.style.width = w + 'px'; frame.style.height = h + 'px';
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let bw = w * dpr, bh = h * dpr; const cap = 1800 / Math.max(bw, bh);
+  if (cap < 1) { bw *= cap; bh *= cap; }
+  canvas.width = Math.round(bw); canvas.height = Math.round(bh);
+  clampCenter(); updateExportDim(); invalidate();
+}
+
+/* ---------- Source images ---------- */
+function setSource(drawable, w, h, name) {
+  const cap = Math.min(maxSize || 4096, 8192), s = Math.min(1, cap / Math.max(w, h));
+  sourceCanvas.width = Math.round(w * s); sourceCanvas.height = Math.round(h * s);
+  sourceCanvas.getContext('2d').drawImage(drawable, 0, 0, sourceCanvas.width, sourceCanvas.height);
+  src.w = sourceCanvas.width; src.h = sourceCanvas.height;
+  uploadSource(); state.cx = state.cy = .5; state.zoom = 100;
+  if (name) { $('fileName').textContent = name; $('badge').hidden = true; src.loaded = true; }
+  syncUI(); layout();
+}
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) { toast('That file is not an image.'); return; }
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => { setSource(im, im.naturalWidth, im.naturalHeight, file.name); URL.revokeObjectURL(url); };
+  im.onerror = () => { toast('That image could not be read. Try a JPG or PNG.'); URL.revokeObjectURL(url); };
+  im.src = url;
+}
+function sampleScene() {
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 1600;
+  const x = c.getContext('2d'), horizon = 700;
+  let g = x.createLinearGradient(0, 0, 0, horizon);
+  g.addColorStop(0, '#c9dbe4'); g.addColorStop(.7, '#e3dcd6'); g.addColorStop(1, '#f0d3c2');
+  x.fillStyle = g; x.fillRect(0, 0, 2400, horizon);
+  g = x.createLinearGradient(0, horizon, 0, 1600);
+  g.addColorStop(0, '#3b7284'); g.addColorStop(.4, '#1f4c5d'); g.addColorStop(1, '#0c2732');
+  x.fillStyle = g; x.fillRect(0, horizon, 2400, 900);
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 26; i++) {
+    const y0 = horizon - 40 + i * 36 + rnd() * 20, amp = 14 + i * 3.2, f1 = .002 + rnd() * .004, f2 = .007 + rnd() * .006, ph = rnd() * 9;
+    x.beginPath(); x.moveTo(0, 1600);
+    for (let px = 0; px <= 2400; px += 12) x.lineTo(px, y0 + Math.sin(px * f1 + ph) * amp + Math.sin(px * f2 + ph * 2) * amp * .4);
+    x.lineTo(2400, 1600); x.closePath();
+    const light = rnd() > .55;
+    x.fillStyle = light ? `rgba(120,175,190,${.10 + rnd() * .14})` : `rgba(8,34,46,${.14 + rnd() * .2})`;
+    x.fill();
+  }
+  return c;
+}
+
+/* ---------- Export ---------- */
+function outSize(long) {
+  const a = outAspect(); long = Math.min(long, maxSize || 4096);
+  return a >= 1 ? [long, Math.round(long / a)] : [Math.round(long * a), long];
+}
+function updateExportDim() { const [w, h] = outSize(+state.exportSize); $('exportDim').textContent = `${w} × ${h} px`; }
+async function exportBlob(long) {
+  const [w, h] = outSize(long); busy = true;
+  try {
+    canvas.width = w; canvas.height = h; draw(w, h);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+    return { blob, w, h };
+  } finally { busy = false; layout(); }
+}
+async function exportJPG() {
+  const btn = $('exportBtn'); btn.disabled = true; btn.textContent = 'Rendering…';
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const { blob, w, h } = await exportBlob(+state.exportSize);
+    if (!blob) throw new Error('empty');
+    const a = document.createElement('a'), url = URL.createObjectURL(blob);
+    a.href = url; a.download = `dream-sequence-${(state.recipe || 'custom').toLowerCase()}-${w}x${h}.jpg`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(`Exported ${w} × ${h} px JPG`);
+  } catch (e) {
+    toast('Export failed at this size. Try the next size down.', 6000);
+  } finally { btn.disabled = false; btn.textContent = 'Export JPG'; }
+}
+
+/* ---------- UI ---------- */
+let toastTimer;
+function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
+function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); }
+
+function buildUI() {
+  for (const [group, defs] of Object.entries(SLIDERS)) {
+    const host = document.querySelector(`[data-sliders="${group}"]`);
+    for (const d of defs) {
+      const row = document.createElement('div'); row.className = 'row'; if (d.meshOnly) row.dataset.meshOnly = '1';
+      row.innerHTML = `<div class="row-head"><label for="s-${d.key}">${d.label}</label><output id="o-${d.key}"></output></div>
+        <input type="range" id="s-${d.key}" min="${d.min}" max="${d.max}" step="1">`;
+      host.appendChild(row);
+      const input = row.querySelector('input');
+      input.addEventListener('input', () => {
+        state[d.key] = +input.value; $('o-' + d.key).textContent = input.value + (d.unit || '');
+        if (d.key === 'zoom') clampCenter(); else custom();
+        invalidate();
+      });
+    }
+  }
+  const rec = $('recipes');
+  for (const name of Object.keys(RECIPES)) {
+    const b = document.createElement('button'); b.className = 'chip'; b.textContent = name; b.dataset.recipe = name;
+    b.onclick = () => applyRecipe(name); rec.appendChild(b);
+  }
+  const sh = document.createElement('button'); sh.className = 'chip accent'; sh.textContent = 'Shuffle colors'; sh.onclick = shuffle; rec.appendChild(sh);
+
+  const asp = $('aspects');
+  for (const name of Object.keys(ASPECTS)) {
+    const b = document.createElement('button'); b.className = 'chip'; b.textContent = name; b.dataset.aspect = name;
+    b.onclick = () => { state.aspect = name; syncUI(); layout(); }; asp.appendChild(b);
+  }
+  $('blend').innerHTML = BLENDS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  $('blend').onchange = e => { state.blend = e.target.value; custom(); invalidate(); };
+  $('exportSize').innerHTML = EXPORT_SIZES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  $('exportSize').onchange = e => { state.exportSize = +e.target.value; updateExportDim(); };
+  $('exportBtn').onclick = exportJPG;
+  $('gradMode').querySelectorAll('button').forEach(b => b.onclick = () => { state.gradMode = b.dataset.mode; custom(); syncUI(); invalidate(); });
+  $('reseed').onclick = () => { state.seed = Math.random() * 100; invalidate(); };
+  $('pick').onclick = () => $('file').click();
+  $('file').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
+
+  const pal = $('palette');
+  const addScale = (colors, cls) => {
+    const row = document.createElement('div'); row.className = 'scale ' + cls;
+    for (const hex of colors) {
+      const b = document.createElement('button'); b.className = 'sw'; b.style.background = hex; b.dataset.hex = hex;
+      b.title = COLOR_NAMES[hex]; b.setAttribute('aria-label', COLOR_NAMES[hex]);
+      b.onclick = () => { state.stops[state.selected].c = hex; custom(); syncStops(); invalidate(); };
+      row.appendChild(b);
+    }
+    pal.appendChild(row);
+  };
+  BRAND.scales.forEach(s => addScale(s.steps, 'ten')); addScale(BRAND.gray, 'twelve');
+}
+
+function syncStops() {
+  const host = $('stops'); host.innerHTML = '';
+  state.selected = clamp(state.selected, 0, state.stops.length - 1);
+  state.stops.forEach((s, i) => {
+    const b = document.createElement('button'); b.className = 'stop'; b.style.background = s.c;
+    b.setAttribute('aria-pressed', i === state.selected); b.setAttribute('aria-label', 'Color ' + (i + 1) + ': ' + COLOR_NAMES[s.c]);
+    b.onclick = () => { state.selected = i; syncStops(); };
+    if (state.stops.length > 2) {
+      const x = document.createElement('span'); x.className = 'x'; x.textContent = '×'; x.title = 'Remove color';
+      x.onclick = e => { e.stopPropagation(); state.stops.splice(i, 1); custom(); syncStops(); invalidate(); };
+      b.appendChild(x);
+    }
+    host.appendChild(b);
+  });
+  if (state.stops.length < 5) {
+    const add = document.createElement('button'); add.className = 'stop-add'; add.textContent = '+'; add.title = 'Add color';
+    add.onclick = () => { state.stops.push({ c: col('Teal', 400), x: .3 + Math.random() * .4, y: .3 + Math.random() * .4 }); state.selected = state.stops.length - 1; custom(); syncStops(); invalidate(); };
+    host.appendChild(add);
+  }
+  const sel = state.stops[state.selected];
+  $('stopName').textContent = COLOR_NAMES[sel.c] + (state.gradMode === 'tone' ? ` · ${state.selected === 0 ? 'shadows' : state.selected === state.stops.length - 1 ? 'highlights' : 'midtones'}` : '');
+  document.querySelectorAll('.sw').forEach(sw => sw.setAttribute('aria-pressed', sw.dataset.hex === sel.c));
+
+  const hh = $('handles'); hh.innerHTML = '';
+  if (state.gradMode !== 'mesh') return;
+  state.stops.forEach((s, i) => {
+    const h = document.createElement('div'); h.className = 'handle' + (i === state.selected ? ' active' : '');
+    h.style.background = s.c; h.style.left = s.x * 100 + '%'; h.style.top = s.y * 100 + '%'; h.title = COLOR_NAMES[s.c];
+    h.addEventListener('pointerdown', e => {
+      e.stopPropagation(); e.preventDefault(); h.setPointerCapture(e.pointerId);
+      if (state.selected !== i) { state.selected = i; }
+      const rect = frame.getBoundingClientRect();
+      const move = ev => {
+        s.x = clamp((ev.clientX - rect.left) / rect.width, -.15, 1.15); s.y = clamp((ev.clientY - rect.top) / rect.height, -.15, 1.15);
+        h.style.left = s.x * 100 + '%'; h.style.top = s.y * 100 + '%'; custom(); invalidate();
+      };
+      const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); syncStops(); };
+      h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+    });
+    hh.appendChild(h);
+  });
+}
+
+function syncUI() {
+  for (const defs of Object.values(SLIDERS)) for (const d of defs) {
+    $('s-' + d.key).value = state[d.key]; $('o-' + d.key).textContent = state[d.key] + (d.unit || '');
+  }
+  document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', c.dataset.recipe === state.recipe));
+  document.querySelectorAll('#aspects .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.aspect === state.aspect));
+  $('gradMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === state.gradMode));
+  document.querySelectorAll('[data-mesh-only]').forEach(r => r.style.display = state.gradMode === 'mesh' ? '' : 'none');
+  $('colorHint').textContent = state.gradMode === 'mesh'
+    ? 'Pick a color, then choose its brand shade. Drag the dots on the image to place each color.'
+    : 'The photo is recolored by brightness: first color fills the shadows, last color the highlights.';
+  $('stageNote').textContent = state.gradMode === 'mesh' ? 'Drag the image to reframe · Drag a dot to move its color' : 'Drag the image to reframe';
+  $('blend').value = state.blend; $('exportSize').value = state.exportSize;
+  syncStops(); updateExportDim();
+}
+
+function applyRecipe(name) {
+  const r = RECIPES[name];
+  Object.assign(state, r, { stops: r.stops.map(s => ({ ...s })), recipe: name, selected: 0 });
+  syncUI(); invalidate();
+}
+
+/* Shuffle stays inside the brand: two hue families, a light, and sometimes a deep tone. */
+function shuffle() {
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const fams = BRAND.scales.map(s => s.name).sort(() => Math.random() - .5);
+  const colors = [
+    col(fams[0], pick([400, 500, 600])), col(fams[1], pick([300, 400, 500, 600])),
+    pick([gray(1), gray(2), col(fams[2], 50), col(fams[2], 100), col(fams[0], 100)]),
+  ];
+  if (Math.random() > .4) colors.push(col(pick(fams), pick([700, 800, 900])));
+  const anchors = [[.12, .15], [.85, .2], [.2, .85], [.82, .8], [.5, .5]].sort(() => Math.random() - .5);
+  state.stops = colors.map((c, i) => ({ c, x: clamp(anchors[i][0] + (Math.random() - .5) * .3, 0, 1), y: clamp(anchors[i][1] + (Math.random() - .5) * .3, 0, 1) }));
+  if (state.gradMode === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
+  state.seed = Math.random() * 100; state.selected = 0; custom(); syncUI(); invalidate();
+}
+
+/* ---------- Pointer: drag the image to reframe ---------- */
+frame.addEventListener('pointerdown', e => {
+  if (e.target.classList.contains('handle')) return;
+  frame.setPointerCapture(e.pointerId); frame.classList.add('panning');
+  let lx = e.clientX, ly = e.clientY; const rect = frame.getBoundingClientRect();
+  const move = ev => {
+    const [fx, fy] = visibleFrac();
+    state.cx -= (ev.clientX - lx) / rect.width * fx; state.cy += (ev.clientY - ly) / rect.height * fy;
+    lx = ev.clientX; ly = ev.clientY; clampCenter(); invalidate();
+  };
+  const up = () => { frame.classList.remove('panning'); frame.removeEventListener('pointermove', move); frame.removeEventListener('pointerup', up); };
+  frame.addEventListener('pointermove', move); frame.addEventListener('pointerup', up);
+});
+['dragenter', 'dragover'].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.remove('dragover'); }));
+stage.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+window.addEventListener('resize', layout);
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; toast('Graphics were reset. Restoring…'); });
+canvas.addEventListener('webglcontextrestored', () => { if (initGL()) { uploadSource(); layout(); } });
+
+/* ---------- Boot ---------- */
+buildUI();
+if (initGL()) {
+  Object.assign(state, RECIPES.Tide, { stops: RECIPES.Tide.stops.map(s => ({ ...s })) });
+  const scene = sampleScene(); setSource(scene, scene.width, scene.height, null);
+}
+window.DreamSequence = { state, exportBlob, invalidate, loadFile, setSource };
+</script>
+</body>
+</html>
