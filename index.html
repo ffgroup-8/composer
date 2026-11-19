@@ -17,8 +17,9 @@
     --line-2: #444648;
     --text: #E7E7E7;
     --muted: #868686;
-    --accent: #F06743;
-    --accent-hover: #F27C5F;
+    --accent: #7FAAE7;
+    --accent-strong: #256ECC;
+    --accent-hover: #4F88DB;
     --sans: "Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
@@ -27,17 +28,19 @@
   body {
     background: var(--bg); color: var(--text);
     font-family: var(--sans); font-size: 14px; line-height: 1.4;
-    display: grid; grid-template-columns: 372px minmax(0, 1fr);
+    display: grid; grid-template-columns: 384px minmax(0, 1fr);
     overflow: hidden;
   }
   button, select, input { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
 
   /* ---------- Panel ---------- */
   .panel {
     background: var(--panel); border-right: 1px solid var(--line);
     display: flex; flex-direction: column; min-height: 0; height: 100vh;
   }
-  .panel-scroll { overflow-y: auto; flex: 1; min-height: 0; padding: 28px 24px 12px; }
+  .panel-head { padding: 24px 24px 0; }
+  .panel-scroll { overflow-y: auto; flex: 1; min-height: 0; padding: 20px 24px 16px; }
   .panel-scroll::-webkit-scrollbar { width: 8px; }
   .panel-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 
@@ -45,17 +48,25 @@
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
     text-transform: uppercase; color: var(--muted);
   }
-  .brand h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; margin-top: 6px; }
-  .brand p { color: var(--muted); margin-top: 6px; font-size: 13px; }
+  .brand h1 { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; margin: 4px 0 16px; }
 
-  .group { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 20px; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 18px; border-bottom: 1px solid var(--line); }
+  .tabs button {
+    background: transparent; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    padding: 10px 0; cursor: pointer; color: var(--muted);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+
+  .group { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 20px; }
+  .group.first { border-top: 0; margin-top: 0; padding-top: 0; }
   .group > h2 {
     font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: 0.16em;
-    text-transform: uppercase; color: var(--text); margin-bottom: 16px;
-    display: flex; gap: 10px; align-items: baseline;
+    text-transform: uppercase; color: var(--text); margin-bottom: 14px;
   }
-  .group > h2 span { color: var(--muted); }
-  .hint { color: var(--muted); font-size: 12px; margin: -6px 0 14px; }
+  .hint { color: var(--muted); font-size: 12px; margin: 0 0 14px; }
+  .sub { font-size: 11px; color: var(--muted); margin: 16px 0 8px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -67,6 +78,7 @@
   .chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
   .chip.accent { border-color: var(--accent); color: var(--accent); }
   .chip.accent:hover { background: var(--accent); color: var(--bg); }
+  .chip.quiet { border-style: dashed; color: var(--muted); }
 
   .row { margin-bottom: 14px; }
   .row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
@@ -89,28 +101,47 @@
 
   .btn {
     background: var(--raise); border: 1px solid var(--line-2); border-radius: 8px;
-    padding: 9px 14px; cursor: pointer; font-size: 13px; transition: border-color .12s, background .12s;
+    padding: 9px 14px; cursor: pointer; font-size: 13px; transition: border-color .12s, background .12s; white-space: nowrap;
   }
   .btn:hover { border-color: var(--muted); }
   .btn.small { padding: 6px 10px; font-size: 12px; }
-  .file-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .file-row { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
   .file-name { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .link { color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+  .link { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
   .link:hover { color: var(--text); }
-  .sub { font-size: 12px; color: var(--muted); margin: 14px 0 8px; font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  input[type="search"], input[type="text"] {
+    width: 100%; background: var(--raise); border: 1px solid var(--line-2); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; min-width: 0;
+  }
+  input[type="search"]:focus, input[type="text"]:focus, select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+  .search { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 8px; }
+  .us-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 10px; max-height: 264px; overflow-y: auto; border-radius: 8px; }
+  .us-grid button { border: 0; padding: 0; background: var(--raise); cursor: pointer; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 4px; position: relative; }
+  .us-grid img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+  .us-grid button:hover img { transform: scale(1.06); }
+  .us-grid button[aria-pressed="true"]::after { content: ""; position: absolute; inset: 0; border: 2px solid var(--accent); border-radius: 4px; }
+  .us-status { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .us-setup { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .us-setup .search { margin: 10px 0 0; }
 
   details { margin-top: 4px; }
   details summary {
-    cursor: pointer; font-size: 12px; color: var(--muted); list-style: none; margin-bottom: 12px;
+    cursor: pointer; font-size: 11px; color: var(--muted); list-style: none; margin-bottom: 12px;
     font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
   }
   details summary::-webkit-details-marker { display: none; }
   details summary::before { content: "+ "; }
   details[open] summary::before { content: "– "; }
 
-  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
-  .seg button { background: transparent; border: 0; padding: 8px 0; cursor: pointer; font-size: 13px; color: var(--muted); }
-  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .field {
+    display: flex; align-items: center; gap: 10px; width: 100%; background: var(--raise);
+    border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 10px; cursor: pointer; margin-bottom: 10px; text-align: left;
+  }
+  .field:hover { border-color: var(--muted); }
+  .field i { width: 22px; height: 22px; border-radius: 50%; outline: 1px solid var(--line-2); flex: none; }
+  .field span { font-size: 13px; }
+  .field em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
 
   .stops { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
   .stop {
@@ -138,33 +169,28 @@
   .scale.twelve { grid-template-columns: repeat(12, 1fr); margin-top: 8px; }
   .sw { aspect-ratio: 1; border: 0; border-radius: 4px; cursor: pointer; padding: 0; position: relative; }
   .sw:hover { transform: scale(1.12); z-index: 1; }
-  .sw[aria-pressed="true"]::after {
-    content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--text); border-radius: 6px;
-  }
-
-  .field {
-    display: flex; align-items: center; gap: 10px; width: 100%; background: var(--raise);
-    border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 10px; cursor: pointer; margin-bottom: 14px; text-align: left;
-  }
-  .field:hover { border-color: var(--muted); }
-  .field i { width: 22px; height: 22px; border-radius: 50%; outline: 1px solid var(--line-2); flex: none; }
-  .field span { font-size: 13px; }
-  .field em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+  .sw[aria-pressed="true"]::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--text); border-radius: 6px; }
   .pop { position: fixed; z-index: 30; width: 300px; margin: 0; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
-  [hidden] { display: none !important; }
+
+  .lib { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px; }
+  .lib button { border: 0; padding: 0; cursor: pointer; border-radius: 6px; overflow: hidden; aspect-ratio: 3 / 2; background: var(--raise); position: relative; }
+  .lib canvas { width: 100%; height: 100%; display: block; }
+  .lib button:hover { outline: 1px solid var(--text); }
 
   select {
     width: 100%; background: var(--raise); border: 1px solid var(--line-2); border-radius: 8px;
     padding: 8px 10px; font-size: 13px; cursor: pointer;
   }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .seg button { background: transparent; border: 0; padding: 8px 0; cursor: pointer; font-size: 13px; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .seg button:disabled { opacity: .35; cursor: not-allowed; }
 
-  .export {
-    border-top: 1px solid var(--line); padding: 16px 24px 20px; background: var(--panel);
-  }
+  .export { border-top: 1px solid var(--line); padding: 16px 24px 20px; background: var(--panel); }
   .export-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
   .export-dim { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
   .export-btn {
-    width: 100%; background: var(--accent); color: #0B0F12; border: 0; border-radius: 10px;
+    width: 100%; background: var(--accent-strong); color: #fff; border: 0; border-radius: 10px;
     padding: 13px 16px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background .12s;
   }
   .export-btn:hover { background: var(--accent-hover); }
@@ -178,7 +204,10 @@
     font-family: var(--mono); letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px;
     color: var(--accent); background: rgba(11,15,18,.72); z-index: 5; pointer-events: none;
   }
-  #frame { position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.55); cursor: grab; touch-action: none; }
+  #frame {
+    position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.55); cursor: grab; touch-action: none;
+    background: repeating-conic-gradient(#1C2023 0% 25%, #2C2E2F 0% 50%) 0 0 / 20px 20px;
+  }
   #frame.panning { cursor: grabbing; }
   #frame canvas { width: 100%; height: 100%; display: block; }
   #handles { position: absolute; inset: 0; pointer-events: none; }
@@ -193,13 +222,21 @@
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
     pointer-events: none;
   }
+  .credit { position: absolute; bottom: 42px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--muted); }
+  .compare {
+    position: absolute; top: 14px; right: 18px; z-index: 4; user-select: none; -webkit-user-select: none; touch-action: none;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: var(--raise); border: 1px solid var(--line-2); border-radius: 999px; padding: 7px 13px; cursor: pointer;
+  }
+  .compare:hover { border-color: var(--muted); }
+  .compare.on { background: var(--text); color: var(--bg); border-color: var(--text); }
   .badge {
     position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; white-space: nowrap;
   }
   .toast {
-    position: absolute; top: 18px; right: 18px; background: var(--raise); border: 1px solid var(--line-2);
+    position: absolute; top: 58px; right: 18px; background: var(--raise); border: 1px solid var(--line-2);
     border-radius: 10px; padding: 10px 14px; font-size: 13px; max-width: 320px; opacity: 0;
     transform: translateY(-6px); transition: opacity .2s, transform .2s; pointer-events: none; z-index: 10;
   }
@@ -215,86 +252,144 @@
 <body>
 
 <aside class="panel">
-  <div class="panel-scroll">
+  <div class="panel-head">
     <div class="brand">
       <div class="eyebrow">Brand Graphic Generator</div>
       <h1>Dream Sequence</h1>
-      <p>Brand-safe imagery from any photograph.</p>
+    </div>
+    <div class="chips" id="recipes"></div>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button data-tab="image" role="tab">Image</button>
+      <button data-tab="color" role="tab">Color</button>
+      <button data-tab="pattern" role="tab">Pattern</button>
+      <button data-tab="finish" role="tab">Finish</button>
+    </nav>
+  </div>
+
+  <div class="panel-scroll">
+    <!-- ================= IMAGE ================= -->
+    <div class="tab" data-tab="image">
+      <section class="group first">
+        <h2>Background</h2>
+        <div class="chips" id="bgTypes"></div>
+
+        <div id="bgPhoto">
+          <div class="file-row">
+            <button class="btn" id="pick">Upload image</button>
+            <span class="file-name" id="fileName">Sample scene</span>
+            <input type="file" id="file" accept="image/*" hidden>
+          </div>
+          <div class="sub" style="margin-top:0">Search Unsplash</div>
+          <form class="search" id="usForm">
+            <input type="search" id="usQuery" placeholder="ocean, moss, dunes…" autocomplete="off">
+            <button class="btn" type="submit">Search</button>
+          </form>
+          <div class="chips" id="usIdeas"></div>
+          <div class="us-setup" id="usSetup" hidden>
+            Unsplash search needs a free Unsplash access key. Create one at
+            <a class="link" href="https://unsplash.com/developers" target="_blank" rel="noopener">unsplash.com/developers</a>,
+            then paste it here. It is saved only in this browser.
+            <form class="search" id="usKeyForm">
+              <input type="text" id="usKey" placeholder="Access key" autocomplete="off" spellcheck="false">
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </div>
+          <div class="us-grid" id="usGrid" hidden></div>
+          <div class="us-status" id="usStatus"></div>
+          <button class="btn small" id="usMore" style="margin-top:8px" hidden>More results</button>
+        </div>
+
+        <div id="bgSolid" style="margin-top:14px"><div data-color="bgA" data-label="Color"></div></div>
+        <div id="bgLinear" style="margin-top:14px">
+          <div data-color="bgA" data-label="From"></div>
+          <div data-color="bgB" data-label="To"></div>
+          <div data-sliders="bgGrad"></div>
+        </div>
+        <p class="hint" id="bgNone" style="margin-top:14px">No background. Only the pattern is drawn, and it exports as a transparent PNG.</p>
+      </section>
+
+      <section class="group">
+        <h2>Frame</h2>
+        <div class="chips" id="aspects" style="margin-bottom:16px"></div>
+        <div data-sliders="source"></div>
+        <details id="toneBox">
+          <summary>Photo tone</summary>
+          <div data-sliders="tone"></div>
+        </details>
+      </section>
+
+      <section class="group" id="dreamGroup">
+        <h2>Dream</h2>
+        <div data-sliders="dream"></div>
+        <button class="btn small" id="reseed">New liquid pattern</button>
+      </section>
     </div>
 
-    <section class="group">
-      <h2><span>00</span> Recipes</h2>
-      <div class="chips" id="recipes"></div>
-    </section>
-
-    <section class="group">
-      <h2><span>01</span> Source</h2>
-      <div class="file-row">
-        <button class="btn" id="pick">Choose image</button>
-        <span class="file-name" id="fileName">Sample scene</span>
-        <input type="file" id="file" accept="image/*" hidden>
-      </div>
-      <a class="link" href="https://unsplash.com" target="_blank" rel="noopener">Find a royalty-free photo on Unsplash</a>
-      <div class="sub">Frame</div>
-      <div class="chips" id="aspects" style="margin-bottom:16px"></div>
-      <div data-sliders="source"></div>
-      <details>
-        <summary>Photo tone</summary>
-        <div data-sliders="tone"></div>
-      </details>
-    </section>
-
-    <section class="group">
-      <h2><span>02</span> Dream</h2>
-      <div data-sliders="dream"></div>
-      <button class="btn small" id="reseed">New liquid pattern</button>
-    </section>
-
-    <section class="group">
-      <h2><span>03</span> Color</h2>
-      <div class="seg" id="gradMode">
-        <button data-mode="mesh">Gradient</button>
-        <button data-mode="tone">Tone map</button>
-      </div>
-      <p class="hint" id="colorHint"></p>
-      <div class="stops" id="stops"></div>
-      <div class="stop-name" id="stopName"></div>
-      <div class="palette" id="palette"></div>
-      <div data-sliders="mesh"></div>
-      <div class="row">
-        <div class="row-head"><label for="blend">Blend mode</label></div>
-        <select id="blend"></select>
-      </div>
-      <div data-sliders="blend"></div>
-    </section>
-
-    <section class="group">
-      <h2><span>04</span> Pattern</h2>
-      <div class="chips" id="patTypes" style="margin-bottom:16px"></div>
-      <div id="patBody">
-        <div id="patColorHost"></div>
-        <div data-sliders="pattern"></div>
-        <div class="row">
-          <div class="row-head"><label for="patFollow">Variation follows</label></div>
-          <select id="patFollow">
-            <option value="noise">Organic noise</option>
-            <option value="light">Light areas of the image</option>
-            <option value="dark">Dark areas of the image</option>
-          </select>
+    <!-- ================= COLOR ================= -->
+    <div class="tab" data-tab="color">
+      <section class="group first">
+        <h2>Color layer</h2>
+        <div class="chips" id="ovTypes" style="margin-bottom:12px"></div>
+        <p class="hint" id="colorHint"></p>
+        <div id="ovBody">
+          <div id="libBox">
+            <div class="sub" style="margin-top:0">Gradient library</div>
+            <div class="lib" id="lib"></div>
+          </div>
+          <div class="stops" id="stops"></div>
+          <div class="stop-name" id="stopName"></div>
+          <div class="palette" id="palette"></div>
+          <div data-sliders="overlay"></div>
+          <div class="row">
+            <div class="row-head"><label for="blend">Blend mode</label></div>
+            <select id="blend"></select>
+          </div>
+          <div data-sliders="blend"></div>
         </div>
-        <div class="row">
-          <div class="row-head"><label for="patBlend">Blend mode</label></div>
-          <select id="patBlend"></select>
-        </div>
-        <div data-sliders="patBlend"></div>
-        <button class="btn small" id="reseedPat">New organic pattern</button>
-      </div>
-    </section>
+      </section>
+    </div>
 
-    <section class="group">
-      <h2><span>05</span> Grain</h2>
-      <div data-sliders="grain"></div>
-    </section>
+    <!-- ================= PATTERN ================= -->
+    <div class="tab" data-tab="pattern">
+      <section class="group first">
+        <h2>Pattern</h2>
+        <div class="chips" id="patTypes" style="margin-bottom:16px"></div>
+        <div id="patBody">
+          <div data-color="patColor" data-label="Color"></div>
+          <div data-sliders="pattern"></div>
+          <div class="row" id="patFollowRow">
+            <div class="row-head"><label for="patFollow">Variation follows</label></div>
+            <select id="patFollow">
+              <option value="noise">Organic noise</option>
+              <option value="light">Light areas of the image</option>
+              <option value="dark">Dark areas of the image</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="row-head"><label for="patBlend">Blend mode</label></div>
+            <select id="patBlend"></select>
+          </div>
+          <div data-sliders="patBlend"></div>
+          <button class="btn small" id="reseed2">New organic pattern</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= FINISH ================= -->
+    <div class="tab" data-tab="finish">
+      <section class="group first">
+        <h2>Grain</h2>
+        <div data-sliders="grain"></div>
+      </section>
+      <section class="group">
+        <h2>File format</h2>
+        <div class="seg" id="format">
+          <button data-format="jpg">JPG</button>
+          <button data-format="png">PNG</button>
+        </div>
+        <p class="hint" id="formatHint"></p>
+      </section>
+    </div>
   </div>
 
   <div class="export">
@@ -307,12 +402,14 @@
 </aside>
 
 <main class="stage" id="stage">
-  <div class="badge" id="badge">Sample scene · drop your own photo anywhere</div>
+  <div class="badge" id="badge"></div>
+  <button class="compare" id="compare" hidden>Hold to see original</button>
   <div id="frame">
     <canvas id="gl"></canvas>
     <div id="handles"></div>
   </div>
-  <div class="stage-note" id="stageNote">Drag the image to reframe · Drag a dot to move its color</div>
+  <div class="credit" id="credit" hidden></div>
+  <div class="stage-note" id="stageNote"></div>
   <div class="toast" id="toast" role="status"></div>
 </main>
 
@@ -331,6 +428,11 @@ const BRAND = {
   ],
   gray: ['#FFFFFF','#E7E7E7','#CDCDCD','#B6B6B6','#9D9D9D','#868686','#707070','#5A5A5A','#444648','#2C2E2F','#1C2023','#0B0F12'],
 };
+
+/* Unsplash search (free tier: 50 searches an hour, shared by everyone on the link).
+   If this is left empty, the tool asks for a key and keeps it in that browser only. */
+const UNSPLASH_ACCESS_KEY = 'FXsr0FiMyN4XdpS7y0TBFnELt5dlE7g0cdJn6ACOlkY';
+
 const STEP_LABELS = [50,100,200,300,400,500,600,700,800,900];
 const COLOR_NAMES = {};
 BRAND.scales.forEach(s => s.steps.forEach((h, i) => COLOR_NAMES[h] = s.name + ' ' + STEP_LABELS[i]));
@@ -338,45 +440,81 @@ BRAND.gray.forEach((h, i) => COLOR_NAMES[h] = 'Grayscale ' + (i + 1));
 const col = (scale, step) => BRAND.scales.find(s => s.name === scale).steps[STEP_LABELS.indexOf(step)];
 const gray = n => BRAND.gray[n - 1];
 
-/* ---------- Recipes: starting points built only from brand colors ---------- */
+/* ---------- Recipes: full looks built only from brand colors ---------- */
+const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, bright: 0, contrast: 0, sat: 0 };
+/* The untouched photo: every effect off. New photos open in this state. */
+const ORIGINAL = { blur: 0, motion: 0, liquify: 0, overlay: 'off', pattern: 'off', grain: 0, bright: 0, contrast: 0, sat: 0 };
 const RECIPES = {
   Tide: {
-    gradMode: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
-    blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, grain: 22, grainSize: 30,
+    overlay: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
+    blur: 55, motion: 45, angle: 60, liquify: 0, grain: 22, grainSize: 30,
     stops: [ {c: gray(2), x: .06, y: .08}, {c: col('Orange',500), x: .14, y: .44}, {c: col('Blue',500), x: .5, y: .84}, {c: col('Burgundy',400), x: 1.0, y: .6} ],
   },
   Ember: {
-    gradMode: 'mesh', blend: 'overlay', opacity: 90, soft: 50, gflow: 30,
-    blur: 70, motion: 20, angle: 120, liquify: 30, liqScale: 35, grain: 28, grainSize: 35,
+    overlay: 'mesh', blend: 'overlay', opacity: 90, soft: 50, gflow: 30,
+    blur: 70, motion: 20, angle: 120, liquify: 30, grain: 28, grainSize: 35,
     stops: [ {c: gray(1), x: .05, y: .06}, {c: col('Orange',500), x: .88, y: .04}, {c: col('Burgundy',700), x: .8, y: .52}, {c: col('Teal',600), x: .04, y: .98} ],
   },
   Lagoon: {
-    gradMode: 'mesh', blend: 'softlight', opacity: 100, soft: 60, gflow: 40,
-    blur: 65, motion: 0, angle: 45, liquify: 45, liqScale: 30, grain: 24, grainSize: 30,
+    overlay: 'mesh', blend: 'softlight', opacity: 100, soft: 60, gflow: 40,
+    blur: 65, motion: 0, angle: 45, liquify: 70, grain: 24, grainSize: 30,
     stops: [ {c: col('Teal',300), x: .2, y: .2}, {c: col('Blue',500), x: .76, y: .7}, {c: gray(1), x: .92, y: .08}, {c: col('Teal',800), x: .08, y: .92} ],
   },
   Afterglow: {
-    gradMode: 'tone', blend: 'normal', opacity: 100, soft: 50, gflow: 0,
-    blur: 60, motion: 30, angle: 20, liquify: 20, liqScale: 40, grain: 30, grainSize: 40,
+    overlay: 'tone', blend: 'normal', opacity: 100,
+    blur: 60, motion: 30, angle: 20, liquify: 20, grain: 30, grainSize: 40,
     stops: [ {c: col('Burgundy',900), x: .1, y: .9}, {c: col('Burgundy',600), x: .4, y: .6}, {c: col('Orange',500), x: .6, y: .4}, {c: col('Orange',200), x: .8, y: .2}, {c: col('Orange',50), x: .9, y: .1} ],
   },
   Mist: {
-    gradMode: 'mesh', blend: 'screen', opacity: 85, soft: 65, gflow: 35,
-    blur: 85, motion: 0, angle: 45, liquify: 25, liqScale: 25, grain: 35, grainSize: 30,
+    overlay: 'mesh', blend: 'screen', opacity: 85, soft: 65, gflow: 35,
+    blur: 85, motion: 0, angle: 45, liquify: 25, grain: 35, grainSize: 30,
     stops: [ {c: gray(1), x: .08, y: .5}, {c: col('Blue',200), x: .62, y: .62}, {c: col('Teal',200), x: .92, y: .08}, {c: col('Orange',100), x: .3, y: .04} ],
+  },
+  Signal: {
+    bg: 'solid', bgA: col('Blue',900), overlay: 'mesh', blend: 'normal', opacity: 100, soft: 60, gflow: 45,
+    blur: 0, motion: 0, liquify: 0, grain: 20, grainSize: 30,
+    stops: [ {c: col('Blue',900), x: .1, y: .1}, {c: col('Blue',500), x: .8, y: .75}, {c: col('Teal',500), x: .15, y: .95}, {c: col('Burgundy',700), x: .95, y: .1} ],
+    pattern: 'dots', patColor: col('Blue',100), patScale: 52, patSize: 70, patAngle: 0, patFlow: 0, patVary: 100, patFollow: 'noise', patOpacity: 90, patBlend: 'normal',
+  },
+  Contour: {
+    bg: 'linear', bgA: col('Burgundy',900), bgB: col('Burgundy',600), bgAngle: 60, overlay: 'off',
+    blur: 0, motion: 0, liquify: 0, grain: 26, grainSize: 30,
+    pattern: 'contours', patColor: col('Orange',300), patScale: 40, patSize: 22, patAngle: 0, patFlow: 20, patVary: 0, patFollow: 'noise', patOpacity: 85, patBlend: 'normal',
+  },
+  Score: {
+    bg: 'linear', bgA: col('Teal',900), bgB: col('Blue',900), bgAngle: 30, overlay: 'off',
+    blur: 0, motion: 0, liquify: 0, grain: 18, grainSize: 30,
+    pattern: 'notes', patColor: col('Teal',300), patScale: 26, patSize: 85, patAngle: 0, patFlow: 0, patVary: 70, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   },
 };
 
+/* ---------- Gradient library: color layers only, applied over whatever is underneath ---------- */
+const LIBRARY = [
+  { name: 'Tide', overlay: 'mesh', soft: 55, gflow: 25, stops: RECIPES.Tide.stops },
+  { name: 'Ember', overlay: 'mesh', soft: 50, gflow: 30, stops: RECIPES.Ember.stops },
+  { name: 'Lagoon', overlay: 'mesh', soft: 60, gflow: 40, stops: RECIPES.Lagoon.stops },
+  { name: 'Mist', overlay: 'mesh', soft: 65, gflow: 35, stops: RECIPES.Mist.stops },
+  { name: 'Deep', overlay: 'mesh', soft: 60, gflow: 45, stops: RECIPES.Signal.stops },
+  { name: 'Bloom', overlay: 'mesh', soft: 45, gflow: 50, stops: [ {c: col('Burgundy',200), x: .15, y: .2}, {c: col('Orange',400), x: .85, y: .3}, {c: col('Burgundy',600), x: .5, y: .95}, {c: gray(1), x: .5, y: .05} ] },
+  { name: 'Dawn', overlay: 'linear', ovAngle: 70, gflow: 20, stops: [ {c: col('Blue',700), x: .2, y: .8}, {c: col('Burgundy',400), x: .5, y: .5}, {c: col('Orange',200), x: .8, y: .2} ] },
+  { name: 'Shore', overlay: 'linear', ovAngle: 20, gflow: 30, stops: [ {c: col('Teal',700), x: .2, y: .5}, {c: col('Teal',200), x: .8, y: .5} ] },
+];
+
 const ASPECTS = { 'Original': null, '16:9': 16/9, '3:2': 3/2, '1:1': 1, '4:5': 4/5, '9:16': 9/16 };
-const BLENDS = [ ['overlay','Overlay'], ['softlight','Soft Light'], ['hardlight','Hard Light'], ['screen','Screen'], ['multiply','Multiply'], ['lighten','Lighten'], ['darken','Darken'], ['color','Color'], ['normal','Normal'] ];
-const BLEND_INDEX = { normal: 0, overlay: 1, softlight: 2, hardlight: 3, screen: 4, multiply: 5, lighten: 6, darken: 7, color: 8 };
+const BG_TYPES = [ ['photo','Photo'], ['solid','Solid'], ['linear','Two-tone'], ['none','Transparent'] ];
+const OV_TYPES = [ ['mesh','Gradient'], ['linear','Two-tone'], ['solid','Solid'], ['tone','Tone map'], ['off','Off'] ];
+const OV_INDEX = { mesh: 0, tone: 1, linear: 2, solid: 3, off: 4 };
 const PAT_TYPES = [ ['off','Off'], ['dots','Dots'], ['lines','Lines'], ['grid','Grid'], ['rings','Rings'], ['contours','Contours'], ['notes','Notes'] ];
 const PAT_INDEX = { off: 0, dots: 1, lines: 2, grid: 3, rings: 4, contours: 5, notes: 6 };
+const BLENDS = [ ['normal','Normal'], ['overlay','Overlay'], ['softlight','Soft Light'], ['hardlight','Hard Light'], ['screen','Screen'], ['multiply','Multiply'], ['lighten','Lighten'], ['darken','Darken'], ['color','Color'] ];
+const BLEND_INDEX = { normal: 0, overlay: 1, softlight: 2, hardlight: 3, screen: 4, multiply: 5, lighten: 6, darken: 7, color: 8 };
 const FOLLOW_INDEX = { noise: 0, light: 1, dark: 2 };
 const EXPORT_SIZES = [ [2400, 'Web · 2400 px'], [4000, 'Large · 4000 px'], [6000, 'Print · 6000 px'] ];
+const IDEAS = ['ocean', 'moss', 'dunes', 'coral', 'ice', 'clouds'];
 
 const SLIDERS = {
-  source: [ { key: 'zoom', label: 'Zoom', min: 100, max: 300, unit: '%' } ],
+  bgGrad: [ { key: 'bgAngle', label: 'Angle', min: 0, max: 360, unit: '°' } ],
+  source: [ { key: 'zoom', label: 'Zoom', min: 100, max: 300, unit: '%', show: s => s.bg === 'photo' } ],
   tone: [
     { key: 'bright', label: 'Brightness', min: -100, max: 100 },
     { key: 'contrast', label: 'Contrast', min: -100, max: 100 },
@@ -387,17 +525,17 @@ const SLIDERS = {
     { key: 'motion', label: 'Motion', min: 0, max: 100 },
     { key: 'angle', label: 'Motion angle', min: 0, max: 180, unit: '°' },
     { key: 'liquify', label: 'Liquify', min: 0, max: 100 },
-    { key: 'liqScale', label: 'Liquify detail', min: 0, max: 100 },
   ],
-  mesh: [
-    { key: 'soft', label: 'Softness', min: 0, max: 100, meshOnly: true },
-    { key: 'gflow', label: 'Flow', min: 0, max: 100, meshOnly: true },
+  overlay: [
+    { key: 'soft', label: 'Softness', min: 0, max: 100, show: s => s.overlay === 'mesh' },
+    { key: 'ovAngle', label: 'Angle', min: 0, max: 360, unit: '°', show: s => s.overlay === 'linear' },
+    { key: 'gflow', label: 'Flow', min: 0, max: 100, show: s => s.overlay === 'mesh' || s.overlay === 'linear' },
   ],
   blend: [ { key: 'opacity', label: 'Opacity', min: 0, max: 100, unit: '%' } ],
   pattern: [
     { key: 'patScale', label: 'Density', min: 0, max: 100 },
     { key: 'patSize', label: 'Size', min: 5, max: 100 },
-    { key: 'patAngle', label: 'Rotation', min: 0, max: 180, unit: '°' },
+    { key: 'patAngle', label: 'Rotation', min: 0, max: 180, unit: '°', show: s => s.pattern !== 'contours' && s.pattern !== 'rings' },
     { key: 'patFlow', label: 'Flow', min: 0, max: 100 },
     { key: 'patVary', label: 'Variation', min: 0, max: 100 },
   ],
@@ -409,14 +547,16 @@ const SLIDERS = {
 };
 
 const state = {
+  tab: 'image',
+  bg: 'photo', bgA: col('Blue',900), bgB: col('Teal',700), bgAngle: 45,
   aspect: 'Original', zoom: 100, cx: .5, cy: .5,
   bright: 0, contrast: 0, sat: 0,
-  blur: 55, motion: 45, angle: 60, liquify: 0, liqScale: 40, seed: 7.3,
-  gradMode: 'mesh', stops: [], soft: 55, gflow: 25,
+  blur: 55, motion: 45, angle: 60, liquify: 0, seed: 7.3,
+  overlay: 'mesh', stops: [], soft: 55, gflow: 25, ovAngle: 45,
   blend: 'screen', opacity: 100,
+  pattern: 'off', patColor: gray(1), patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   grain: 22, grainSize: 30,
-  pattern: 'off', patColor: '#FFFFFF', patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
-  exportSize: 4000, recipe: 'Tide', selected: 0,
+  format: 'jpg', exportSize: 4000, recipe: 'Tide', selected: 0,
 };
 
 const $ = id => document.getElementById(id);
@@ -425,25 +565,47 @@ const canvas = $('gl'), frame = $('frame'), stage = $('stage');
 
 /* =====================================================================
    WebGL pipeline
-   base (crop + tone) -> gaussian blur -> motion blur -> composite
-   (liquify, brand gradient, blend, grain). Every distance is relative
-   to the output size, so the export matches the preview.
+   background (photo / solid / two-tone) -> gaussian blur -> motion blur
+   -> composite (liquify, color layer, pattern, grain). Every distance is
+   relative to the output size, so the export matches the preview.
    ===================================================================== */
 const VERT = `#version 300 es
 in vec2 aPos; out vec2 vUv;
 void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
+const OKLAB = `
+vec3 oklab2rgb(vec3 c){
+  float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
+  float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
+  float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
+  float l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+  vec3 lin = vec3( 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+                  -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+                  -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+  lin = clamp(lin, 0.0, 1.0);
+  return mix(12.92 * lin, 1.055 * pow(lin, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, lin));
+}`;
+
 const FRAG_BASE = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
-uniform sampler2D uSrc; uniform vec2 uCenter, uFrac;
-uniform float uBright, uContrast, uSat;
+uniform sampler2D uSrc; uniform vec2 uCenter, uFrac, uAsp, uBgDir;
+uniform float uBright, uContrast, uSat; uniform int uBg; uniform vec3 uBgA, uBgB;
+${OKLAB}
 void main(){
-  vec3 c = texture(uSrc, uCenter + (vUv - 0.5) * uFrac).rgb;
-  c += uBright * 0.35;
-  c = (c - 0.5) * (1.0 + uContrast) + 0.5;
-  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  c = mix(vec3(l), c, 1.0 + uSat);
+  vec3 c;
+  if (uBg == 0) {
+    c = texture(uSrc, uCenter + (vUv - 0.5) * uFrac).rgb;
+    c += uBright * 0.35;
+    c = (c - 0.5) * (1.0 + uContrast) + 0.5;
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    c = mix(vec3(l), c, 1.0 + uSat);
+  } else if (uBg == 1) {
+    c = oklab2rgb(uBgA);
+  } else {
+    vec2 p = vUv * uAsp; float ext = abs(uBgDir.x) * uAsp.x + abs(uBgDir.y) * uAsp.y;
+    c = oklab2rgb(mix(uBgA, uBgB, clamp(dot(p - 0.5 * uAsp, uBgDir) / ext + 0.5, 0.0, 1.0)));
+  }
   o = vec4(clamp(c, 0.0, 1.0), 1.0);
 }`;
 
@@ -475,8 +637,8 @@ precision highp float;
 in vec2 vUv; out vec4 o;
 uniform sampler2D uBase; uniform vec2 uRes;
 uniform float uLiq, uLiqScale, uSeed;
-uniform int uMode, uCount, uBlend;
-uniform vec3 uCol[5]; uniform vec2 uPos[5];
+uniform int uBgNone, uOvMode, uCount, uBlend;
+uniform vec3 uCol[5]; uniform vec2 uPos[5]; uniform vec2 uOvDir;
 uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells;
 uniform int uPat, uPatFollow, uPatBlend; uniform vec3 uPatCol;
 uniform float uPatN, uPatSize, uPatRot, uPatFlow, uPatVary, uPatOpacity;
@@ -493,19 +655,7 @@ float vnoise(vec2 p){
 }
 float fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; } return s; }
 vec2 flow(vec2 p){ return vec2(fbm(p), fbm(p + vec2(41.3, 27.9))) - 0.47; }
-
-vec3 oklab2rgb(vec3 c){
-  float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
-  float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
-  float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
-  float l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
-  vec3 lin = vec3( 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-                  -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-                  -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
-  lin = clamp(lin, 0.0, 1.0);
-  return mix(12.92 * lin, 1.055 * pow(lin, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, lin));
-}
-
+${OKLAB}
 float lum(vec3 c){ return dot(c, vec3(0.3, 0.59, 0.11)); }
 vec3 clipColor(vec3 c){
   float l = lum(c), n = min(min(c.r, c.g), c.b), x = max(max(c.r, c.g), c.b);
@@ -524,6 +674,11 @@ vec3 blend(vec3 b, vec3 s, int m){
   if (m == 6) return max(b, s);
   if (m == 7) return min(b, s);
   return clipColor(s + (lum(b) - lum(s)));
+}
+vec3 ramp(float t){
+  float x = clamp(t, 0.0, 1.0) * float(uCount - 1);
+  int i = clamp(int(floor(x)), 0, uCount - 2);
+  return oklab2rgb(mix(uCol[i], uCol[i + 1], x - float(i)));
 }
 
 /* Coverage of the pattern at this pixel, 0 to 1. */
@@ -561,53 +716,63 @@ float patternCov(vec2 p, vec2 asp, vec3 base){
 void main(){
   vec2 asp = uRes / max(uRes.x, uRes.y);
   vec2 p = vUv * asp;
+  vec3 c = vec3(0.0), base = vec3(0.5); float alpha = 1.0;
 
-  vec2 uvb = vUv;
-  if (uLiq > 0.0) {
-    vec2 q = p * mix(1.2, 7.0, uLiqScale) + uSeed * vec2(3.7, 1.9);
-    vec2 w1 = flow(q);
-    vec2 w2 = flow(q + 3.0 * w1 + vec2(5.2, 1.3));
-    uvb += (w2 * uLiq) / asp;
-  }
-  vec3 base = texture(uBase, uvb).rgb;
-
-  vec3 g;
-  if (uMode == 0) {
-    vec2 gp = p;
-    if (uGFlow > 0.0) { vec2 q = p * 1.6 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0); gp += flow(q + 2.0 * flow(q)) * uGFlow; }
-    float k = mix(3.6, 1.0, uSoft);
-    vec3 acc = vec3(0.0); float ws = 0.0;
-    for (int i = 0; i < 5; i++) {
-      if (i >= uCount) break;
-      vec2 d = gp - uPos[i] * asp; float w = 1.0 / pow(dot(d, d) + 0.002, k);
-      acc += uCol[i] * w; ws += w;
+  if (uBgNone == 0) {
+    vec2 uvb = vUv;
+    if (uLiq > 0.0) {
+      vec2 q = p * mix(1.2, 7.0, uLiqScale) + uSeed * vec2(3.7, 1.9);
+      vec2 w1 = flow(q);
+      vec2 w2 = flow(q + 3.0 * w1 + vec2(5.2, 1.3));
+      uvb += (w2 * uLiq) / asp;
     }
-    g = oklab2rgb(acc / ws);
-  } else {
-    float x = clamp(lum(base), 0.0, 1.0) * float(uCount - 1);
-    int i = min(int(floor(x)), uCount - 2);
-    g = oklab2rgb(mix(uCol[i], uCol[i + 1], x - float(i)));
-  }
+    base = texture(uBase, uvb).rgb; c = base;
 
-  vec3 c = mix(base, clamp(blend(base, g, uBlend), 0.0, 1.0), uOpacity);
+    if (uOvMode != 4) {
+      vec3 g;
+      if (uOvMode == 1) g = ramp(lum(base));
+      else if (uOvMode == 3) g = oklab2rgb(uCol[0]);
+      else {
+        vec2 gp = p;
+        if (uGFlow > 0.0) { vec2 q = p * 1.6 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0); gp += flow(q + 2.0 * flow(q)) * uGFlow; }
+        if (uOvMode == 0) {
+          float k = mix(3.6, 1.0, uSoft);
+          vec3 acc = vec3(0.0); float ws = 0.0;
+          for (int i = 0; i < 5; i++) {
+            if (i >= uCount) break;
+            vec2 d = gp - uPos[i] * asp; float w = 1.0 / pow(dot(d, d) + 0.002, k);
+            acc += uCol[i] * w; ws += w;
+          }
+          g = oklab2rgb(acc / ws);
+        } else {
+          float ext = abs(uOvDir.x) * asp.x + abs(uOvDir.y) * asp.y;
+          g = ramp(dot(gp - 0.5 * asp, uOvDir) / ext + 0.5);
+        }
+      }
+      c = mix(base, clamp(blend(base, g, uBlend), 0.0, 1.0), uOpacity);
+    }
+  } else alpha = 0.0;
 
   if (uPat > 0) {
     float cov = patternCov(p, asp, base) * uPatOpacity;
-    c = mix(c, clamp(blend(c, uPatCol, uPatBlend), 0.0, 1.0), cov);
+    if (uBgNone == 1) { c = uPatCol; alpha = cov; }
+    else c = mix(c, clamp(blend(c, uPatCol, uPatBlend), 0.0, 1.0), cov);
   }
 
-  if (uGrain > 0.0) {
-    vec2 gc = p * uGrainCells;
-    float n = (vnoise(gc + uSeed * 13.0) + vnoise(gc * 1.9 + 71.7)) * 0.5 - 0.5;
-    c += n * uGrain;
+  if (uBgNone == 0) {
+    if (uGrain > 0.0) {
+      vec2 gc = p * uGrainCells;
+      c += ((vnoise(gc + uSeed * 13.0) + vnoise(gc * 1.9 + 71.7)) * 0.5 - 0.5) * uGrain;
+    }
+    c += (hash21(gl_FragCoord.xy) - 0.5) / 255.0;
   }
-  c += (hash21(gl_FragCoord.xy) - 0.5) / 255.0;
-  o = vec4(clamp(c, 0.0, 1.0), 1.0);
+  c = clamp(c, 0.0, 1.0);
+  o = vec4(c * alpha, alpha);
 }`;
 
 let gl, progs, floatOK, maxSize, srcTex, targets = { w: 0, h: 0, float: false, a: null, b: null };
 const sourceCanvas = document.createElement('canvas');
-const src = { w: 3, h: 2, loaded: false };
+const src = { w: 3, h: 2 };
 
 function program(fragSrc) {
   const mk = (type, s) => {
@@ -624,7 +789,7 @@ function program(fragSrc) {
 }
 
 function initGL() {
-  gl = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false });
+  gl = canvas.getContext('webgl2', { antialias: false, alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: false });
   if (!gl) { toast('This browser does not support WebGL2, which Dream Sequence needs.', 8000); return false; }
   floatOK = !!gl.getExtension('EXT_color_buffer_float');
   maxSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
@@ -681,9 +846,8 @@ function clampCenter() {
 
 function hexToRgb(hex) { const n = parseInt(hex.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
 function hexToOklab(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-  const r = lin(n >> 16 & 255), g = lin(n >> 8 & 255), b = lin(n & 255);
+  const lin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const [r, g, b] = hexToRgb(hex).map(lin);
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
   const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
@@ -691,12 +855,14 @@ function hexToOklab(hex) {
           1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
           0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
 }
+const dirOf = deg => [Math.cos(deg * Math.PI / 180), Math.sin(deg * Math.PI / 180)];
 
 function draw(outW, outH) {
-  const long = Math.max(outW, outH);
-  const sigmaOut = Math.pow(state.blur / 100, 2) * 0.07 * long;
+  const s = peek ? { ...state, ...ORIGINAL } : state;
+  const long = Math.max(outW, outH), none = s.bg === 'none';
+  const sigmaOut = none ? 0 : Math.pow(s.blur / 100, 2) * 0.07 * long;
   const d = Math.max(1, sigmaOut / 8);
-  const ww = Math.max(8, Math.round(outW / d)), wh = Math.max(8, Math.round(outH / d));
+  const ww = none ? 8 : Math.max(8, Math.round(outW / d)), wh = none ? 8 : Math.max(8, Math.round(outH / d));
   ensureTargets(ww, wh, floatOK && d > 1.5);
   let cur = targets.a, other = targets.b;
   const pass = (prog, target, w, h, inputTex, set) => {
@@ -706,53 +872,59 @@ function draw(outW, outH) {
     set(prog.u); gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
   const swap = () => { const t = cur; cur = other; other = t; };
+  const aspX = outW / long, aspY = outH / long;
 
-  const [fx, fy] = visibleFrac();
-  pass(progs.base, cur, ww, wh, srcTex, u => {
-    gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), state.cx, state.cy); gl.uniform2f(u('uFrac'), fx, fy);
-    gl.uniform1f(u('uBright'), state.bright / 100); gl.uniform1f(u('uContrast'), state.contrast / 100); gl.uniform1f(u('uSat'), state.sat / 100);
-  });
-
-  const sigmaW = sigmaOut / d;
-  if (sigmaW > 0.25) {
-    for (const dir of [[1 / ww, 0], [0, 1 / wh]]) {
-      pass(progs.gauss, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uDir'), dir[0], dir[1]); gl.uniform1f(u('uSigma'), sigmaW); });
-      swap();
+  if (!none) {
+    const [fx, fy] = visibleFrac(), bd = dirOf(s.bgAngle);
+    pass(progs.base, cur, ww, wh, srcTex, u => {
+      gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), s.cx, s.cy); gl.uniform2f(u('uFrac'), fx, fy);
+      gl.uniform1f(u('uBright'), s.bright / 100); gl.uniform1f(u('uContrast'), s.contrast / 100); gl.uniform1f(u('uSat'), s.sat / 100);
+      gl.uniform1i(u('uBg'), s.bg === 'photo' ? 0 : s.bg === 'solid' ? 1 : 2);
+      gl.uniform3fv(u('uBgA'), hexToOklab(s.bgA)); gl.uniform3fv(u('uBgB'), hexToOklab(s.bgB));
+      gl.uniform2f(u('uAsp'), aspX, aspY); gl.uniform2f(u('uBgDir'), bd[0], bd[1]);
+    });
+    const sigmaW = sigmaOut / d;
+    if (sigmaW > 0.25) {
+      for (const dir of [[1 / ww, 0], [0, 1 / wh]]) {
+        pass(progs.gauss, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uDir'), dir[0], dir[1]); gl.uniform1f(u('uSigma'), sigmaW); });
+        swap();
+      }
+    }
+    if (s.motion > 0) {
+      const len = Math.pow(s.motion / 100, 1.6) * 0.22 * long, a = s.angle * Math.PI / 180;
+      const sx = Math.cos(a) * len / outW, sy = Math.sin(a) * len / outH;
+      for (const k of [1, 1 / 24]) {
+        pass(progs.motion, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uSpan'), sx * k, sy * k); });
+        swap();
+      }
     }
   }
-  if (state.motion > 0) {
-    const len = Math.pow(state.motion / 100, 1.6) * 0.4 * long, a = state.angle * Math.PI / 180;
-    const sx = Math.cos(a) * len / outW, sy = Math.sin(a) * len / outH;
-    for (const k of [1, 1 / 24]) {
-      pass(progs.motion, other, ww, wh, cur.tex, u => { gl.uniform1i(u('uTex'), 0); gl.uniform2f(u('uSpan'), sx * k, sy * k); });
-      swap();
-    }
-  }
 
-  const n = state.stops.length, cols = new Float32Array(15), pos = new Float32Array(10);
-  state.stops.forEach((s, i) => { cols.set(hexToOklab(s.c), i * 3); pos[i * 2] = s.x; pos[i * 2 + 1] = 1 - s.y; });
+  const n = s.stops.length, cols = new Float32Array(15), pos = new Float32Array(10), od = dirOf(s.ovAngle);
+  s.stops.forEach((s, i) => { cols.set(hexToOklab(s.c), i * 3); pos[i * 2] = s.x; pos[i * 2 + 1] = 1 - s.y; });
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   pass(progs.comp, null, outW, outH, cur.tex, u => {
-    gl.uniform1i(u('uBase'), 0); gl.uniform2f(u('uRes'), outW, outH);
-    gl.uniform1f(u('uLiq'), Math.pow(state.liquify / 100, 1.5) * 0.9); gl.uniform1f(u('uLiqScale'), state.liqScale / 100); gl.uniform1f(u('uSeed'), state.seed);
-    gl.uniform1i(u('uMode'), state.gradMode === 'mesh' ? 0 : 1); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[state.blend]);
-    gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos);
-    gl.uniform1f(u('uSoft'), state.soft / 100); gl.uniform1f(u('uGFlow'), state.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), state.opacity / 100);
-    gl.uniform1f(u('uGrain'), state.grain / 100 * 0.6); gl.uniform1f(u('uGrainCells'), 1800 - state.grainSize / 100 * 1400);
-    gl.uniform1i(u('uPat'), PAT_INDEX[state.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[state.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[state.patBlend]);
-    gl.uniform3fv(u('uPatCol'), hexToRgb(state.patColor));
-    gl.uniform1f(u('uPatN'), 5 + Math.pow(state.patScale / 100, 1.6) * 115); gl.uniform1f(u('uPatSize'), state.patSize / 100);
-    gl.uniform1f(u('uPatRot'), state.patAngle * Math.PI / 180); gl.uniform1f(u('uPatFlow'), state.patFlow / 100 * 0.25);
-    gl.uniform1f(u('uPatVary'), state.patVary / 100); gl.uniform1f(u('uPatOpacity'), state.patOpacity / 100);
+    gl.uniform1i(u('uBase'), 0); gl.uniform2f(u('uRes'), outW, outH); gl.uniform1i(u('uBgNone'), none ? 1 : 0);
+    gl.uniform1f(u('uLiq'), Math.pow(s.liquify / 100, 1.3) * 0.22); gl.uniform1f(u('uLiqScale'), 0.3); gl.uniform1f(u('uSeed'), s.seed);
+    gl.uniform1i(u('uOvMode'), OV_INDEX[s.overlay]); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[s.blend]);
+    gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos); gl.uniform2f(u('uOvDir'), od[0], od[1]);
+    gl.uniform1f(u('uSoft'), s.soft / 100); gl.uniform1f(u('uGFlow'), s.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), s.opacity / 100);
+    gl.uniform1f(u('uGrain'), s.grain / 100 * 0.4); gl.uniform1f(u('uGrainCells'), 1800 - s.grainSize / 100 * 1400);
+    gl.uniform1i(u('uPat'), PAT_INDEX[s.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[s.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[s.patBlend]);
+    gl.uniform3fv(u('uPatCol'), hexToRgb(s.patColor));
+    gl.uniform1f(u('uPatN'), 5 + Math.pow(s.patScale / 100, 1.6) * 115); gl.uniform1f(u('uPatSize'), s.patSize / 100);
+    gl.uniform1f(u('uPatRot'), s.patAngle * Math.PI / 180); gl.uniform1f(u('uPatFlow'), s.patFlow / 100 * 0.25);
+    gl.uniform1f(u('uPatVary'), s.patVary / 100); gl.uniform1f(u('uPatOpacity'), s.patOpacity / 100);
   });
 }
 
-let dirty = false, busy = false;
+let dirty = false, busy = false, peek = false;
 function invalidate() { if (dirty) return; dirty = true; requestAnimationFrame(() => { dirty = false; if (!busy && gl) draw(canvas.width, canvas.height); }); }
 
 /* ---------- Layout: fit the frame to the stage at the chosen aspect ---------- */
 function layout() {
   const r = stage.getBoundingClientRect(), a = outAspect();
-  const aw = Math.max(120, r.width - 96), ah = Math.max(120, r.height - 132);
+  const aw = Math.max(120, r.width - 96), ah = Math.max(120, r.height - 150);
   let w = aw, h = aw / a; if (h > ah) { h = ah; w = ah * a; }
   frame.style.width = w + 'px'; frame.style.height = h + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -763,13 +935,14 @@ function layout() {
 }
 
 /* ---------- Source images ---------- */
-function setSource(drawable, w, h, name) {
+function setSource(drawable, w, h, name, credit) {
   const cap = Math.min(maxSize || 4096, 8192), s = Math.min(1, cap / Math.max(w, h));
   sourceCanvas.width = Math.round(w * s); sourceCanvas.height = Math.round(h * s);
   sourceCanvas.getContext('2d').drawImage(drawable, 0, 0, sourceCanvas.width, sourceCanvas.height);
   src.w = sourceCanvas.width; src.h = sourceCanvas.height;
   uploadSource(); state.cx = state.cy = .5; state.zoom = 100;
-  if (name) { $('fileName').textContent = name; $('badge').hidden = true; src.loaded = true; }
+  if (name) { $('fileName').textContent = name; Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); }
+  const cr = $('credit'); cr.hidden = !credit; cr.innerHTML = credit || '';
   syncUI(); layout();
 }
 function loadFile(file) {
@@ -778,6 +951,14 @@ function loadFile(file) {
   im.onload = () => { setSource(im, im.naturalWidth, im.naturalHeight, file.name); URL.revokeObjectURL(url); };
   im.onerror = () => { toast('That image could not be read. Try a JPG or PNG.'); URL.revokeObjectURL(url); };
   im.src = url;
+}
+function loadRemote(url, name, credit) {
+  return new Promise(resolve => {
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => { setSource(im, im.naturalWidth, im.naturalHeight, name, credit); resolve(true); };
+    im.onerror = () => { toast('That photo could not be loaded. Try another.'); resolve(false); };
+    im.src = url;
+  });
 }
 function sampleScene() {
   const c = document.createElement('canvas'); c.width = 2400; c.height = 1600;
@@ -801,65 +982,143 @@ function sampleScene() {
   return c;
 }
 
+/* ---------- Unsplash search ---------- */
+const us = { q: '', page: 0, pages: 0, selected: null };
+function unsplashKey() {
+  if (UNSPLASH_ACCESS_KEY) return UNSPLASH_ACCESS_KEY;
+  try { return localStorage.getItem('dreamSequenceUnsplashKey') || ''; } catch (e) { return ''; }
+}
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+async function searchUnsplash(q, page = 1) {
+  q = q.trim(); if (!q) return;
+  const key = unsplashKey();
+  if (!key) { $('usSetup').hidden = false; $('usKey').focus(); us.q = q; return; }
+  const status = $('usStatus'), grid = $('usGrid');
+  status.textContent = 'Searching…'; $('usMore').hidden = true;
+  try {
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=18&page=${page}&content_filter=high`;
+    const res = await fetch(url, { headers: { Authorization: 'Client-ID ' + key, 'Accept-Version': 'v1' } });
+    if (res.status === 401) { status.textContent = 'Unsplash did not accept that access key.'; $('usSetup').hidden = !!UNSPLASH_ACCESS_KEY; return; }
+    if (res.status === 403 || res.status === 429) { status.textContent = 'Unsplash search limit reached for this hour. Try again shortly.'; return; }
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    if (page === 1) grid.innerHTML = '';
+    us.q = q; us.page = page; us.pages = data.total_pages || 0;
+    for (const ph of data.results || []) {
+      const b = document.createElement('button'); b.type = 'button'; b.title = 'Photo by ' + ph.user.name;
+      const im = document.createElement('img'); im.loading = 'lazy'; im.src = ph.urls.thumb; im.alt = ph.alt_description || 'Unsplash photo';
+      b.appendChild(im); b.onclick = () => pickUnsplash(ph, b); grid.appendChild(b);
+    }
+    grid.hidden = !grid.children.length;
+    status.textContent = grid.children.length ? '' : `Nothing found for "${q}". Try a broader word.`;
+    $('usMore').hidden = !(us.page < us.pages);
+  } catch (e) { status.textContent = 'Unsplash search could not be reached. Check the connection and try again.'; }
+}
+async function pickUnsplash(ph, btn) {
+  $('usStatus').textContent = 'Loading photo…';
+  const utm = '?utm_source=dream_sequence&utm_medium=referral';
+  const credit = `Photo by <a class="link" href="${esc(ph.user.links.html)}${utm}" target="_blank" rel="noopener">${esc(ph.user.name)}</a> on <a class="link" href="https://unsplash.com/${utm}" target="_blank" rel="noopener">Unsplash</a>`;
+  const ok = await loadRemote(ph.urls.raw + '&w=3000&q=85&fm=jpg&fit=max', 'Unsplash · ' + ph.user.name, credit);
+  $('usStatus').textContent = '';
+  if (!ok) return;
+  document.querySelectorAll('#usGrid button').forEach(b => b.setAttribute('aria-pressed', b === btn));
+  // Unsplash asks apps to report when a photo is actually used.
+  fetch(ph.links.download_location, { headers: { Authorization: 'Client-ID ' + unsplashKey() } }).catch(() => {});
+}
+
 /* ---------- Export ---------- */
+function exportFormat() { return state.bg === 'none' ? 'png' : state.format; }
 function outSize(long) {
   const a = outAspect(); long = Math.min(long, maxSize || 4096);
   return a >= 1 ? [long, Math.round(long / a)] : [Math.round(long * a), long];
 }
-function updateExportDim() { const [w, h] = outSize(+state.exportSize); $('exportDim').textContent = `${w} × ${h} px`; }
-async function exportBlob(long) {
+function updateExportDim() {
+  const [w, h] = outSize(+state.exportSize); $('exportDim').textContent = `${w} × ${h} px`;
+  $('exportBtn').textContent = 'Export ' + exportFormat().toUpperCase();
+}
+async function exportBlob(long, format = exportFormat()) {
   const [w, h] = outSize(long); busy = true;
   try {
     canvas.width = w; canvas.height = h; draw(w, h);
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
-    return { blob, w, h };
+    const blob = await new Promise(res => canvas.toBlob(res, format === 'png' ? 'image/png' : 'image/jpeg', 0.95));
+    return { blob, w, h, format };
   } finally { busy = false; layout(); }
 }
-async function exportJPG() {
+async function exportImage() {
   const btn = $('exportBtn'); btn.disabled = true; btn.textContent = 'Rendering…';
   await new Promise(r => setTimeout(r, 30));
   try {
-    const { blob, w, h } = await exportBlob(+state.exportSize);
+    const { blob, w, h, format } = await exportBlob(+state.exportSize);
     if (!blob) throw new Error('empty');
     const a = document.createElement('a'), url = URL.createObjectURL(blob);
-    a.href = url; a.download = `dream-sequence-${(state.recipe || 'custom').toLowerCase()}-${w}x${h}.jpg`;
+    a.href = url; a.download = `dream-sequence-${(state.recipe || 'custom').toLowerCase()}-${w}x${h}.${format}`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-    toast(`Exported ${w} × ${h} px JPG`);
+    toast(`Exported ${w} × ${h} px ${format.toUpperCase()}`);
   } catch (e) {
     toast('Export failed at this size. Try the next size down.', 6000);
-  } finally { btn.disabled = false; btn.textContent = 'Export JPG'; }
+  } finally { btn.disabled = false; updateExportDim(); }
 }
 
 /* ---------- UI ---------- */
 let toastTimer;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
-function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); }
+function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); syncStage(); }
+/* Stage messages: what is on screen, and the hold-to-compare button once a photo has been changed. */
+function syncStage() {
+  const photo = state.bg === 'photo', original = state.recipe === 'Original', sample = $('fileName').textContent === 'Sample scene';
+  const badge = $('badge');
+  badge.textContent = original ? 'Original photo · pick a recipe or adjust a control to begin' : 'Sample scene · upload or search for your own photo';
+  badge.hidden = !photo || !(original || sample);
+  $('compare').hidden = !photo || original;
+}
+function applyOriginal() { Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); syncUI(); layout(); }
+function changed() { custom(); syncUI(); invalidate(); }
 
-/* Small pop-up brand palette for single-color fields. */
-const pop = document.createElement('div'); pop.className = 'palette pop'; pop.hidden = true; document.body.appendChild(pop);
-function openPop(anchor, current, onPick) {
-  pop.innerHTML = '';
+function buildPalette(host, current, onPick) {
   const addScale = (colors, cls) => {
     const row = document.createElement('div'); row.className = 'scale ' + cls;
     for (const hex of colors) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = hex;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = hex; b.dataset.hex = hex;
       b.title = COLOR_NAMES[hex]; b.setAttribute('aria-label', COLOR_NAMES[hex]); b.setAttribute('aria-pressed', hex === current);
-      b.onclick = () => { onPick(hex); pop.hidden = true; }; row.appendChild(b);
+      b.onclick = () => onPick(hex); row.appendChild(b);
     }
-    pop.appendChild(row);
+    host.appendChild(row);
   };
   BRAND.scales.forEach(s => addScale(s.steps, 'ten')); addScale(BRAND.gray, 'twelve');
+}
+
+const pop = document.createElement('div'); pop.className = 'palette pop'; pop.hidden = true; document.body.appendChild(pop);
+function openPop(anchor, current, onPick) {
+  pop.innerHTML = ''; buildPalette(pop, current, hex => { onPick(hex); pop.hidden = true; });
   const r = anchor.getBoundingClientRect(); pop.hidden = false;
   pop.style.left = clamp(r.left, 8, innerWidth - 308) + 'px'; pop.style.top = Math.min(r.bottom + 6, innerHeight - 180) + 'px';
 }
 document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.field')) pop.hidden = true; });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') pop.hidden = true; });
 
+const fields = [];
+function buildFields() {
+  document.querySelectorAll('[data-color]').forEach(host => {
+    const key = host.dataset.color, b = document.createElement('button'); b.type = 'button'; b.className = 'field';
+    b.innerHTML = `<i></i><span>${host.dataset.label}</span><em></em>`;
+    b.onclick = () => pop.hidden ? openPop(b, state[key], hex => { state[key] = hex; changed(); }) : (pop.hidden = true);
+    host.appendChild(b); fields.push({ key, b });
+  });
+}
+function chipRow(hostId, items, key, after) {
+  const host = $(hostId);
+  for (const [value, label] of items) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label; b.dataset.value = value;
+    b.onclick = () => { state[key] = value; if (after) after(value); changed(); };
+    host.appendChild(b);
+  }
+}
+
 function buildUI() {
   for (const [group, defs] of Object.entries(SLIDERS)) {
     const host = document.querySelector(`[data-sliders="${group}"]`);
     for (const d of defs) {
-      const row = document.createElement('div'); row.className = 'row'; if (d.meshOnly) row.dataset.meshOnly = '1';
+      const row = document.createElement('div'); row.className = 'row'; row.id = 'r-' + d.key;
       row.innerHTML = `<div class="row-head"><label for="s-${d.key}">${d.label}</label><output id="o-${d.key}"></output></div>
         <input type="range" id="s-${d.key}" min="${d.min}" max="${d.max}" step="1">`;
       host.appendChild(row);
@@ -872,86 +1131,109 @@ function buildUI() {
     }
   }
   const rec = $('recipes');
+  const og = document.createElement('button'); og.className = 'chip'; og.textContent = 'Original'; og.dataset.recipe = 'Original';
+  og.onclick = applyOriginal; rec.appendChild(og);
+  const cmp = $('compare'), setPeek = on => { if (peek === on) return; peek = on; cmp.classList.toggle('on', on); $('handles').style.visibility = on ? 'hidden' : ''; invalidate(); };
+  cmp.addEventListener('pointerdown', e => { e.preventDefault(); cmp.setPointerCapture(e.pointerId); setPeek(true); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cmp.addEventListener(t, () => setPeek(false)));
   for (const name of Object.keys(RECIPES)) {
     const b = document.createElement('button'); b.className = 'chip'; b.textContent = name; b.dataset.recipe = name;
     b.onclick = () => applyRecipe(name); rec.appendChild(b);
   }
   const sh = document.createElement('button'); sh.className = 'chip accent'; sh.textContent = 'Shuffle colors'; sh.onclick = shuffle; rec.appendChild(sh);
 
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; pop.hidden = true; syncUI(); });
+  chipRow('bgTypes', BG_TYPES, 'bg', v => { if (v === 'none' && state.pattern === 'off') { state.pattern = 'dots'; state.tab = 'pattern'; } layoutSoon(); });
+  chipRow('ovTypes', OV_TYPES, 'overlay', v => { if (v === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]); });
+  chipRow('patTypes', PAT_TYPES, 'pattern');
   const asp = $('aspects');
   for (const name of Object.keys(ASPECTS)) {
     const b = document.createElement('button'); b.className = 'chip'; b.textContent = name; b.dataset.aspect = name;
     b.onclick = () => { state.aspect = name; syncUI(); layout(); }; asp.appendChild(b);
   }
-  $('blend').innerHTML = BLENDS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  const opts = BLENDS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  $('blend').innerHTML = opts; $('patBlend').innerHTML = opts;
   $('blend').onchange = e => { state.blend = e.target.value; custom(); invalidate(); };
+  $('patBlend').onchange = e => { state.patBlend = e.target.value; custom(); invalidate(); };
+  $('patFollow').onchange = e => { state.patFollow = e.target.value; custom(); invalidate(); };
   $('exportSize').innerHTML = EXPORT_SIZES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
   $('exportSize').onchange = e => { state.exportSize = +e.target.value; updateExportDim(); };
-  $('exportBtn').onclick = exportJPG;
-  $('gradMode').querySelectorAll('button').forEach(b => b.onclick = () => { state.gradMode = b.dataset.mode; custom(); syncUI(); invalidate(); });
-  $('reseed').onclick = () => { state.seed = Math.random() * 100; invalidate(); };
+  $('exportBtn').onclick = exportImage;
+  $('format').querySelectorAll('button').forEach(b => b.onclick = () => { state.format = b.dataset.format; syncUI(); });
+  $('reseed').onclick = $('reseed2').onclick = () => { state.seed = Math.random() * 100; invalidate(); };
   $('pick').onclick = () => $('file').click();
   $('file').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
 
-  const pt = $('patTypes');
-  for (const [value, label] of PAT_TYPES) {
-    const b = document.createElement('button'); b.className = 'chip'; b.textContent = label; b.dataset.value = value;
-    b.onclick = () => { state.pattern = value; syncUI(); invalidate(); }; pt.appendChild(b);
-  }
-  $('patBlend').innerHTML = $('blend').innerHTML;
-  $('patBlend').onchange = e => { state.patBlend = e.target.value; invalidate(); };
-  $('patFollow').onchange = e => { state.patFollow = e.target.value; invalidate(); };
-  $('reseedPat').onclick = () => { state.seed = Math.random() * 100; invalidate(); };
-  const pf = document.createElement('button'); pf.type = 'button'; pf.className = 'field'; pf.id = 'patColor';
-  pf.innerHTML = '<i></i><span>Color</span><em></em>';
-  pf.onclick = () => pop.hidden ? openPop(pf, state.patColor, hex => { state.patColor = hex; syncUI(); invalidate(); }) : (pop.hidden = true);
-  $('patColorHost').appendChild(pf);
-
-  const pal = $('palette');
-  const addScale = (colors, cls) => {
-    const row = document.createElement('div'); row.className = 'scale ' + cls;
-    for (const hex of colors) {
-      const b = document.createElement('button'); b.className = 'sw'; b.style.background = hex; b.dataset.hex = hex;
-      b.title = COLOR_NAMES[hex]; b.setAttribute('aria-label', COLOR_NAMES[hex]);
-      b.onclick = () => { state.stops[state.selected].c = hex; custom(); syncStops(); invalidate(); };
-      row.appendChild(b);
-    }
-    pal.appendChild(row);
+  $('usForm').onsubmit = e => { e.preventDefault(); searchUnsplash($('usQuery').value); };
+  $('usMore').onclick = () => searchUnsplash(us.q, us.page + 1);
+  $('usKeyForm').onsubmit = e => {
+    e.preventDefault(); const k = $('usKey').value.trim(); if (!k) return;
+    try { localStorage.setItem('dreamSequenceUnsplashKey', k); } catch (err) {}
+    $('usKey').value = ''; $('usSetup').hidden = true; searchUnsplash(us.q || $('usQuery').value);
   };
-  BRAND.scales.forEach(s => addScale(s.steps, 'ten')); addScale(BRAND.gray, 'twelve');
+  for (const idea of IDEAS) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip quiet'; b.textContent = idea;
+    b.onclick = () => { $('usQuery').value = idea; searchUnsplash(idea); }; $('usIdeas').appendChild(b);
+  }
+
+  buildPalette($('palette'), null, hex => { state.stops[state.selected].c = hex; custom(); syncStops(); invalidate(); });
+  buildFields();
+  const lib = $('lib');
+  LIBRARY.forEach((g, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.title = g.name; b.setAttribute('aria-label', 'Gradient: ' + g.name);
+    const c = document.createElement('canvas'); c.width = 150; c.height = 100; c.id = 'lib-' + i; b.appendChild(c);
+    b.onclick = () => { Object.assign(state, { overlay: g.overlay, soft: g.soft ?? state.soft, gflow: g.gflow ?? state.gflow, ovAngle: g.ovAngle ?? state.ovAngle, stops: g.stops.map(s => ({ ...s })), selected: 0 }); changed(); };
+    lib.appendChild(b);
+  });
+}
+let layoutTimer; function layoutSoon() { clearTimeout(layoutTimer); layoutTimer = setTimeout(layout, 0); }
+
+/* Draw each library gradient through the real pipeline so the thumbnail is exact. */
+function renderLibrary() {
+  const keep = { ...state, stops: state.stops }; busy = true;
+  LIBRARY.forEach((g, i) => {
+    Object.assign(state, { bg: 'solid', bgA: gray(6), blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100,
+      overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, stops: g.stops });
+    canvas.width = 150; canvas.height = 100; draw(150, 100);
+    $('lib-' + i).getContext('2d').drawImage(canvas, 0, 0);
+  });
+  Object.assign(state, keep); busy = false;
 }
 
 function syncStops() {
   const host = $('stops'); host.innerHTML = '';
-  state.selected = clamp(state.selected, 0, state.stops.length - 1);
-  state.stops.forEach((s, i) => {
+  const mode = state.overlay, shown = mode === 'solid' ? state.stops.slice(0, 1) : state.stops;
+  state.selected = clamp(state.selected, 0, shown.length - 1);
+  shown.forEach((s, i) => {
     const b = document.createElement('button'); b.className = 'stop'; b.style.background = s.c;
     b.setAttribute('aria-pressed', i === state.selected); b.setAttribute('aria-label', 'Color ' + (i + 1) + ': ' + COLOR_NAMES[s.c]);
     b.onclick = () => { state.selected = i; syncStops(); };
-    if (state.stops.length > 2) {
+    if (mode !== 'solid' && state.stops.length > 2) {
       const x = document.createElement('span'); x.className = 'x'; x.textContent = '×'; x.title = 'Remove color';
       x.onclick = e => { e.stopPropagation(); state.stops.splice(i, 1); custom(); syncStops(); invalidate(); };
       b.appendChild(x);
     }
     host.appendChild(b);
   });
-  if (state.stops.length < 5) {
+  if (mode !== 'solid' && state.stops.length < 5) {
     const add = document.createElement('button'); add.className = 'stop-add'; add.textContent = '+'; add.title = 'Add color';
     add.onclick = () => { state.stops.push({ c: col('Teal', 400), x: .3 + Math.random() * .4, y: .3 + Math.random() * .4 }); state.selected = state.stops.length - 1; custom(); syncStops(); invalidate(); };
     host.appendChild(add);
   }
-  const sel = state.stops[state.selected];
-  $('stopName').textContent = COLOR_NAMES[sel.c] + (state.gradMode === 'tone' ? ` · ${state.selected === 0 ? 'shadows' : state.selected === state.stops.length - 1 ? 'highlights' : 'midtones'}` : '');
-  document.querySelectorAll('.sw').forEach(sw => sw.setAttribute('aria-pressed', sw.dataset.hex === sel.c));
+  const sel = state.stops[state.selected], last = state.stops.length - 1;
+  const role = mode === 'tone' ? (state.selected === 0 ? ' · shadows' : state.selected === last ? ' · highlights' : ' · midtones')
+    : mode === 'linear' ? (state.selected === 0 ? ' · start' : state.selected === last ? ' · end' : '') : '';
+  $('stopName').textContent = COLOR_NAMES[sel.c] + role;
+  document.querySelectorAll('#palette .sw').forEach(sw => sw.setAttribute('aria-pressed', sw.dataset.hex === sel.c));
 
   const hh = $('handles'); hh.innerHTML = '';
-  if (state.gradMode !== 'mesh') return;
+  if (mode !== 'mesh' || state.tab !== 'color' || state.bg === 'none') return;
   state.stops.forEach((s, i) => {
     const h = document.createElement('div'); h.className = 'handle' + (i === state.selected ? ' active' : '');
     h.style.background = s.c; h.style.left = s.x * 100 + '%'; h.style.top = s.y * 100 + '%'; h.title = COLOR_NAMES[s.c];
     h.addEventListener('pointerdown', e => {
       e.stopPropagation(); e.preventDefault(); h.setPointerCapture(e.pointerId);
-      if (state.selected !== i) { state.selected = i; }
+      state.selected = i;
       const rect = frame.getBoundingClientRect();
       const move = ev => {
         s.x = clamp((ev.clientX - rect.left) / rect.width, -.15, 1.15); s.y = clamp((ev.clientY - rect.top) / rect.height, -.15, 1.15);
@@ -964,30 +1246,49 @@ function syncStops() {
   });
 }
 
+const OV_HINTS = {
+  mesh: 'Pick a color, choose its brand shade, then drag the dots on the image to place each color.',
+  linear: 'A simple blend from the first color to the last. Use Angle to turn it.',
+  solid: 'One flat brand color over the image. The blend mode decides how it mixes.',
+  tone: 'The image is recolored by brightness: first color fills the shadows, last color the highlights.',
+  off: 'No color layer. The background shows as it is.',
+};
 function syncUI() {
+  const s = state, photo = s.bg === 'photo', none = s.bg === 'none';
   for (const defs of Object.values(SLIDERS)) for (const d of defs) {
-    $('s-' + d.key).value = state[d.key]; $('o-' + d.key).textContent = state[d.key] + (d.unit || '');
+    $('s-' + d.key).value = s[d.key]; $('o-' + d.key).textContent = s[d.key] + (d.unit || '');
+    $('r-' + d.key).hidden = d.show ? !d.show(s) : false;
   }
-  document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', c.dataset.recipe === state.recipe));
-  document.querySelectorAll('#aspects .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.aspect === state.aspect));
-  $('gradMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === state.gradMode));
-  document.querySelectorAll('[data-mesh-only]').forEach(r => r.style.display = state.gradMode === 'mesh' ? '' : 'none');
-  $('colorHint').textContent = state.gradMode === 'mesh'
-    ? 'Pick a color, then choose its brand shade. Drag the dots on the image to place each color.'
-    : 'The photo is recolored by brightness: first color fills the shadows, last color the highlights.';
-  $('stageNote').textContent = state.gradMode === 'mesh' ? 'Drag the image to reframe · Drag a dot to move its color' : 'Drag the image to reframe';
-  $('blend').value = state.blend; $('exportSize').value = state.exportSize;
-  $('patTypes').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.value === state.pattern));
-  $('patBody').hidden = state.pattern === 'off';
-  $('patBlend').value = state.patBlend; $('patFollow').value = state.patFollow;
-  $('patColor').querySelector('i').style.background = state.patColor; $('patColor').querySelector('em').textContent = COLOR_NAMES[state.patColor];
+  $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === s.tab));
+  document.querySelectorAll('.tab').forEach(t => t.hidden = t.dataset.tab !== s.tab);
+  document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', c.dataset.recipe === s.recipe));
+  document.querySelectorAll('#aspects .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.aspect === s.aspect));
+  for (const [id, key] of [['bgTypes', 'bg'], ['ovTypes', 'overlay'], ['patTypes', 'pattern']])
+    $(id).querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.value === s[key]));
+
+  $('bgPhoto').hidden = !photo; $('bgSolid').hidden = s.bg !== 'solid'; $('bgLinear').hidden = s.bg !== 'linear'; $('bgNone').hidden = !none;
+  $('toneBox').hidden = !photo; $('dreamGroup').hidden = none || s.bg === 'solid';
+  syncStage();
+  $('credit').hidden = !photo || !$('credit').innerHTML;
+
+  $('ovBody').hidden = s.overlay === 'off' || none; $('libBox').hidden = s.overlay === 'tone' || s.overlay === 'solid';
+  $('colorHint').textContent = none ? 'The color layer needs a background. Choose Photo, Solid or Two-tone on the Image tab.' : OV_HINTS[s.overlay];
+  $('patBody').hidden = s.pattern === 'off';
+  $('patFollowRow').hidden = s.patVary === 0;
+  $('blend').value = s.blend; $('patBlend').value = s.patBlend; $('patFollow').value = s.patFollow; $('exportSize').value = s.exportSize;
+  fields.forEach(f => { f.b.querySelector('i').style.background = s[f.key]; f.b.querySelector('em').textContent = COLOR_NAMES[s[f.key]]; });
+
+  const fmt = exportFormat();
+  $('format').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', b.dataset.format === fmt); b.disabled = none && b.dataset.format === 'jpg'; });
+  $('formatHint').textContent = none ? 'A transparent background can only be saved as PNG.' : fmt === 'png' ? 'PNG keeps every pixel exact. Files are much larger than JPG.' : 'JPG is the right choice for most uses.';
+  $('stageNote').textContent = (photo ? 'Drag the image to reframe' : '') + (s.overlay === 'mesh' && s.tab === 'color' && !none ? (photo ? ' · ' : '') + 'Drag a dot to move its color' : '');
   syncStops(); updateExportDim();
 }
 
 function applyRecipe(name) {
   const r = RECIPES[name];
-  Object.assign(state, r, { stops: r.stops.map(s => ({ ...s })), recipe: name, selected: 0 });
-  syncUI(); invalidate();
+  Object.assign(state, RECIPE_BASE, r, { stops: (r.stops || state.stops).map(s => ({ ...s })), recipe: name, selected: 0 });
+  syncUI(); layout();
 }
 
 /* Shuffle stays inside the brand: two hue families, a light, and sometimes a deep tone. */
@@ -1001,13 +1302,15 @@ function shuffle() {
   if (Math.random() > .4) colors.push(col(pick(fams), pick([700, 800, 900])));
   const anchors = [[.12, .15], [.85, .2], [.2, .85], [.82, .8], [.5, .5]].sort(() => Math.random() - .5);
   state.stops = colors.map((c, i) => ({ c, x: clamp(anchors[i][0] + (Math.random() - .5) * .3, 0, 1), y: clamp(anchors[i][1] + (Math.random() - .5) * .3, 0, 1) }));
-  if (state.gradMode === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
-  state.seed = Math.random() * 100; state.selected = 0; custom(); syncUI(); invalidate();
+  if (state.overlay === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
+  if (state.overlay === 'off') state.overlay = 'mesh';
+  if (state.pattern !== 'off') state.patColor = pick([gray(1), col(fams[0], 100), col(fams[1], 200), col(fams[2], 300)]);
+  state.seed = Math.random() * 100; state.selected = 0; changed();
 }
 
 /* ---------- Pointer: drag the image to reframe ---------- */
 frame.addEventListener('pointerdown', e => {
-  if (e.target.classList.contains('handle')) return;
+  if (e.target.classList.contains('handle') || state.bg !== 'photo') return;
   frame.setPointerCapture(e.pointerId); frame.classList.add('panning');
   let lx = e.clientX, ly = e.clientY; const rect = frame.getBoundingClientRect();
   const move = ev => {
@@ -1028,10 +1331,11 @@ canvas.addEventListener('webglcontextrestored', () => { if (initGL()) { uploadSo
 /* ---------- Boot ---------- */
 buildUI();
 if (initGL()) {
-  Object.assign(state, RECIPES.Tide, { stops: RECIPES.Tide.stops.map(s => ({ ...s })) });
+  Object.assign(state, RECIPE_BASE, RECIPES.Tide, { stops: RECIPES.Tide.stops.map(s => ({ ...s })) });
   const scene = sampleScene(); setSource(scene, scene.width, scene.height, null);
+  renderLibrary(); layout();
 }
-window.DreamSequence = { state, exportBlob, invalidate, loadFile, setSource };
+window.DreamSequence = { state, exportBlob, invalidate, loadFile, loadRemote, setSource, syncUI, searchUnsplash };
 </script>
 </body>
 </html>
