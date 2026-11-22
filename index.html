@@ -170,9 +170,8 @@
   .palette { background: var(--raise); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 18px; }
   .scale { display: grid; gap: 3px; margin-bottom: 3px; }
   .scale:last-child { margin-bottom: 0; }
-  .scale.ten { grid-template-columns: repeat(10, 1fr); }
-  .scale.twelve { grid-template-columns: repeat(12, 1fr); margin-top: 8px; }
-  .sw { aspect-ratio: 1; border: 0; border-radius: 4px; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px rgba(var(--shadow), .08); }
+  .scale.five { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .sw { aspect-ratio: 1; border: 0; border-radius: 4px; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
   .sw:hover { transform: scale(1.12); z-index: 1; }
   .sw[aria-pressed="true"]::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--text); border-radius: 6px; }
   .pop { position: fixed; z-index: 30; width: 300px; margin: 0; box-shadow: 0 18px 50px rgba(var(--shadow), .6); }
@@ -421,30 +420,34 @@
 
 <script>
 /* =====================================================================
-   BRAND PALETTE (provisional)
-   The only colors this tool can produce. Swap these values when the
-   master brand library is finalized; nothing else needs to change.
+   BRAND PALETTE: the ten core colors
+   The only colors this tool can produce. Tints and shades will be added
+   here once the brand is final; nothing else needs to change.
    ===================================================================== */
 const BRAND = {
-  scales: [
-    { name: 'Burgundy', steps: ['#FAEEF2','#F1D9E1','#E2B2C2','#CC8BA1','#B1627D','#8E3C57','#6F2440','#520E25','#3F0A1C','#280611'] },
-    { name: 'Orange',   steps: ['#FEF3F0','#FDE3DA','#F8C4B3','#F1957D','#F27C5F','#F06743','#C94A2A','#A33A20','#782B18','#4F1C10'] },
-    { name: 'Teal',     steps: ['#F1F8F8','#DEEEED','#B8DBD8','#9DCECB','#82C0BE','#65AFAB','#519F9B','#3E817C','#2C5E5D','#1C3F3E'] },
-    { name: 'Blue',     steps: ['#EFF4FD','#D5E4F8','#AECCF1','#7FAAE7','#4F88DB','#256ECC','#1F5FB2','#1B5298','#133464','#0D2141'] },
+  colors: [
+    { name: 'Note',    hex: '#620A28' },
+    { name: 'Prompt',  hex: '#F06743' },
+    { name: 'Ledger',  hex: '#3F0819' },
+    { name: 'Settle',  hex: '#1F5A52' },
+    { name: 'Link',    hex: '#1D5599' },
+    { name: 'Paid',    hex: '#ABEBAB' },
+    { name: 'Flow',    hex: '#B1EBE8' },
+    { name: 'Receipt', hex: '#FFF1E5' },
+    { name: 'Paper',   hex: '#FEFCFA' },
+    { name: 'Ink',     hex: '#171B22' },
   ],
-  gray: ['#FFFFFF','#E7E7E7','#CDCDCD','#B6B6B6','#9D9D9D','#868686','#707070','#5A5A5A','#444648','#2C2E2F','#1C2023','#0B0F12'],
 };
 
 /* Unsplash search (free tier: 50 searches an hour, shared by everyone on the link).
    If this is left empty, the tool asks for a key and keeps it in that browser only. */
 const UNSPLASH_ACCESS_KEY = 'FXsr0FiMyN4XdpS7y0TBFnELt5dlE7g0cdJn6ACOlkY';
 
-const STEP_LABELS = [50,100,200,300,400,500,600,700,800,900];
 const COLOR_NAMES = {};
-BRAND.scales.forEach(s => s.steps.forEach((h, i) => COLOR_NAMES[h] = s.name + ' ' + STEP_LABELS[i]));
-BRAND.gray.forEach((h, i) => COLOR_NAMES[h] = 'Grayscale ' + (i + 1));
-const col = (scale, step) => BRAND.scales.find(s => s.name === scale).steps[STEP_LABELS.indexOf(step)];
-const gray = n => BRAND.gray[n - 1];
+BRAND.colors.forEach(c => COLOR_NAMES[c.hex] = c.name);
+const C = {};
+BRAND.colors.forEach(c => C[c.name] = c.hex);
+const THUMB_BG = '#868686'; /* neutral behind gradient library thumbnails only; never selectable */
 
 /* ---------- Recipes: full looks built only from brand colors ---------- */
 const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, bright: 0, contrast: 0, sat: 0 };
@@ -454,43 +457,43 @@ const RECIPES = {
   Tide: {
     overlay: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
     blur: 55, motion: 45, angle: 60, liquify: 0, grain: 22, grainSize: 30,
-    stops: [ {c: gray(2), x: .06, y: .08}, {c: col('Orange',500), x: .14, y: .44}, {c: col('Blue',500), x: .5, y: .84}, {c: col('Burgundy',400), x: 1.0, y: .6} ],
+    stops: [ {c: C.Paper, x: .06, y: .08}, {c: C.Prompt, x: .14, y: .44}, {c: C.Link, x: .5, y: .84}, {c: C.Note, x: 1.0, y: .6} ],
   },
   Ember: {
     overlay: 'mesh', blend: 'overlay', opacity: 90, soft: 50, gflow: 30,
     blur: 70, motion: 20, angle: 120, liquify: 30, grain: 28, grainSize: 35,
-    stops: [ {c: gray(1), x: .05, y: .06}, {c: col('Orange',500), x: .88, y: .04}, {c: col('Burgundy',700), x: .8, y: .52}, {c: col('Teal',600), x: .04, y: .98} ],
+    stops: [ {c: C.Paper, x: .05, y: .06}, {c: C.Prompt, x: .88, y: .04}, {c: C.Note, x: .8, y: .52}, {c: C.Settle, x: .04, y: .98} ],
   },
   Lagoon: {
     overlay: 'mesh', blend: 'softlight', opacity: 100, soft: 60, gflow: 40,
     blur: 65, motion: 0, angle: 45, liquify: 70, grain: 24, grainSize: 30,
-    stops: [ {c: col('Teal',300), x: .2, y: .2}, {c: col('Blue',500), x: .76, y: .7}, {c: gray(1), x: .92, y: .08}, {c: col('Teal',800), x: .08, y: .92} ],
+    stops: [ {c: C.Flow, x: .2, y: .2}, {c: C.Link, x: .76, y: .7}, {c: C.Paper, x: .92, y: .08}, {c: C.Settle, x: .08, y: .92} ],
   },
   Afterglow: {
     overlay: 'tone', blend: 'normal', opacity: 100,
     blur: 60, motion: 30, angle: 20, liquify: 20, grain: 30, grainSize: 40,
-    stops: [ {c: col('Burgundy',900), x: .1, y: .9}, {c: col('Burgundy',600), x: .4, y: .6}, {c: col('Orange',500), x: .6, y: .4}, {c: col('Orange',200), x: .8, y: .2}, {c: col('Orange',50), x: .9, y: .1} ],
+    stops: [ {c: C.Ledger, x: .1, y: .9}, {c: C.Note, x: .4, y: .6}, {c: C.Prompt, x: .6, y: .4}, {c: C.Receipt, x: .8, y: .2}, {c: C.Paper, x: .9, y: .1} ],
   },
   Mist: {
     overlay: 'mesh', blend: 'screen', opacity: 85, soft: 65, gflow: 35,
     blur: 85, motion: 0, angle: 45, liquify: 25, grain: 35, grainSize: 30,
-    stops: [ {c: gray(1), x: .08, y: .5}, {c: col('Blue',200), x: .62, y: .62}, {c: col('Teal',200), x: .92, y: .08}, {c: col('Orange',100), x: .3, y: .04} ],
+    stops: [ {c: C.Paper, x: .08, y: .5}, {c: C.Flow, x: .62, y: .62}, {c: C.Receipt, x: .92, y: .08}, {c: C.Paper, x: .3, y: .04} ],
   },
   Signal: {
-    bg: 'solid', bgA: col('Blue',900), overlay: 'mesh', blend: 'normal', opacity: 100, soft: 60, gflow: 45,
+    bg: 'solid', bgA: C.Ledger, overlay: 'mesh', blend: 'normal', opacity: 100, soft: 60, gflow: 45,
     blur: 0, motion: 0, liquify: 0, grain: 20, grainSize: 30,
-    stops: [ {c: col('Blue',900), x: .1, y: .1}, {c: col('Blue',500), x: .8, y: .75}, {c: col('Teal',500), x: .15, y: .95}, {c: col('Burgundy',700), x: .95, y: .1} ],
-    pattern: 'dots', patColor: col('Blue',100), patScale: 52, patSize: 70, patAngle: 0, patFlow: 0, patVary: 100, patFollow: 'noise', patOpacity: 90, patBlend: 'normal',
+    stops: [ {c: C.Ledger, x: .1, y: .1}, {c: C.Link, x: .8, y: .75}, {c: C.Settle, x: .15, y: .95}, {c: C.Note, x: .95, y: .1} ],
+    pattern: 'dots', patColor: C.Flow, patScale: 52, patSize: 70, patAngle: 0, patFlow: 0, patVary: 100, patFollow: 'noise', patOpacity: 90, patBlend: 'normal',
   },
   Contour: {
-    bg: 'linear', bgA: col('Burgundy',900), bgB: col('Burgundy',600), bgAngle: 60, overlay: 'off',
+    bg: 'linear', bgA: C.Ledger, bgB: C.Note, bgAngle: 60, overlay: 'off',
     blur: 0, motion: 0, liquify: 0, grain: 26, grainSize: 30,
-    pattern: 'contours', patColor: col('Orange',300), patScale: 40, patSize: 22, patAngle: 0, patFlow: 20, patVary: 0, patFollow: 'noise', patOpacity: 85, patBlend: 'normal',
+    pattern: 'contours', patColor: C.Prompt, patScale: 40, patSize: 22, patAngle: 0, patFlow: 20, patVary: 0, patFollow: 'noise', patOpacity: 85, patBlend: 'normal',
   },
   Score: {
-    bg: 'linear', bgA: col('Teal',900), bgB: col('Blue',900), bgAngle: 30, overlay: 'off',
+    bg: 'linear', bgA: C.Settle, bgB: C.Link, bgAngle: 30, overlay: 'off',
     blur: 0, motion: 0, liquify: 0, grain: 18, grainSize: 30,
-    pattern: 'notes', patColor: col('Teal',300), patScale: 26, patSize: 85, patAngle: 0, patFlow: 0, patVary: 70, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
+    pattern: 'notes', patColor: C.Flow, patScale: 26, patSize: 85, patAngle: 0, patFlow: 0, patVary: 70, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   },
 };
 
@@ -501,9 +504,9 @@ const LIBRARY = [
   { name: 'Lagoon', overlay: 'mesh', soft: 60, gflow: 40, stops: RECIPES.Lagoon.stops },
   { name: 'Mist', overlay: 'mesh', soft: 65, gflow: 35, stops: RECIPES.Mist.stops },
   { name: 'Deep', overlay: 'mesh', soft: 60, gflow: 45, stops: RECIPES.Signal.stops },
-  { name: 'Bloom', overlay: 'mesh', soft: 45, gflow: 50, stops: [ {c: col('Burgundy',200), x: .15, y: .2}, {c: col('Orange',400), x: .85, y: .3}, {c: col('Burgundy',600), x: .5, y: .95}, {c: gray(1), x: .5, y: .05} ] },
-  { name: 'Dawn', overlay: 'linear', ovAngle: 70, gflow: 20, stops: [ {c: col('Blue',700), x: .2, y: .8}, {c: col('Burgundy',400), x: .5, y: .5}, {c: col('Orange',200), x: .8, y: .2} ] },
-  { name: 'Shore', overlay: 'linear', ovAngle: 20, gflow: 30, stops: [ {c: col('Teal',700), x: .2, y: .5}, {c: col('Teal',200), x: .8, y: .5} ] },
+  { name: 'Bloom', overlay: 'mesh', soft: 45, gflow: 50, stops: [ {c: C.Receipt, x: .15, y: .2}, {c: C.Prompt, x: .85, y: .3}, {c: C.Note, x: .5, y: .95}, {c: C.Paper, x: .5, y: .05} ] },
+  { name: 'Dawn', overlay: 'linear', ovAngle: 70, gflow: 20, stops: [ {c: C.Link, x: .2, y: .8}, {c: C.Note, x: .5, y: .5}, {c: C.Receipt, x: .8, y: .2} ] },
+  { name: 'Shore', overlay: 'linear', ovAngle: 20, gflow: 30, stops: [ {c: C.Settle, x: .2, y: .5}, {c: C.Flow, x: .8, y: .5} ] },
 ];
 
 const ASPECTS = { 'Original': null, '16:9': 16/9, '3:2': 3/2, '1:1': 1, '4:5': 4/5, '9:16': 9/16 };
@@ -554,13 +557,13 @@ const SLIDERS = {
 
 const state = {
   tab: 'image',
-  bg: 'photo', bgA: col('Blue',900), bgB: col('Teal',700), bgAngle: 45,
+  bg: 'photo', bgA: C.Ledger, bgB: C.Note, bgAngle: 45,
   aspect: 'Original', zoom: 100, cx: .5, cy: .5,
   bright: 0, contrast: 0, sat: 0,
   blur: 55, motion: 45, angle: 60, liquify: 0, seed: 7.3,
   overlay: 'mesh', stops: [], soft: 55, gflow: 25, ovAngle: 45,
   blend: 'screen', opacity: 100,
-  pattern: 'off', patColor: gray(1), patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
+  pattern: 'off', patColor: C.Paper, patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   grain: 22, grainSize: 30,
   format: 'jpg', exportSize: 4000, recipe: 'Tide', selected: 0,
 };
@@ -1090,7 +1093,7 @@ function buildPalette(host, current, onPick) {
     }
     host.appendChild(row);
   };
-  BRAND.scales.forEach(s => addScale(s.steps, 'ten')); addScale(BRAND.gray, 'twelve');
+  addScale(BRAND.colors.map(c => c.hex), 'five');
 }
 
 const pop = document.createElement('div'); pop.className = 'palette pop'; pop.hidden = true; document.body.appendChild(pop);
@@ -1198,7 +1201,7 @@ let layoutTimer; function layoutSoon() { clearTimeout(layoutTimer); layoutTimer 
 function renderLibrary() {
   const keep = { ...state, stops: state.stops }; busy = true;
   LIBRARY.forEach((g, i) => {
-    Object.assign(state, { bg: 'solid', bgA: gray(6), blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100,
+    Object.assign(state, { bg: 'solid', bgA: THUMB_BG, blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100,
       overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, stops: g.stops });
     canvas.width = 150; canvas.height = 100; draw(150, 100);
     $('lib-' + i).getContext('2d').drawImage(canvas, 0, 0);
@@ -1223,7 +1226,7 @@ function syncStops() {
   });
   if (mode !== 'solid' && state.stops.length < 5) {
     const add = document.createElement('button'); add.className = 'stop-add'; add.textContent = '+'; add.title = 'Add color';
-    add.onclick = () => { state.stops.push({ c: col('Teal', 400), x: .3 + Math.random() * .4, y: .3 + Math.random() * .4 }); state.selected = state.stops.length - 1; custom(); syncStops(); invalidate(); };
+    add.onclick = () => { state.stops.push({ c: C.Flow, x: .3 + Math.random() * .4, y: .3 + Math.random() * .4 }); state.selected = state.stops.length - 1; custom(); syncStops(); invalidate(); };
     host.appendChild(add);
   }
   const sel = state.stops[state.selected], last = state.stops.length - 1;
@@ -1297,20 +1300,17 @@ function applyRecipe(name) {
   syncUI(); layout();
 }
 
-/* Shuffle stays inside the brand: two hue families, a light, and sometimes a deep tone. */
+/* Shuffle stays inside the brand: two main colors, a light, and sometimes a deep tone. */
 function shuffle() {
   const pick = a => a[Math.floor(Math.random() * a.length)];
-  const fams = BRAND.scales.map(s => s.name).sort(() => Math.random() - .5);
-  const colors = [
-    col(fams[0], pick([400, 500, 600])), col(fams[1], pick([300, 400, 500, 600])),
-    pick([gray(1), gray(2), col(fams[2], 50), col(fams[2], 100), col(fams[0], 100)]),
-  ];
-  if (Math.random() > .4) colors.push(col(pick(fams), pick([700, 800, 900])));
+  const mains = [C.Note, C.Prompt, C.Settle, C.Link].sort(() => Math.random() - .5);
+  const colors = [ mains[0], mains[1], pick([C.Paper, C.Receipt, C.Flow]) ];
+  if (Math.random() > .4) colors.push(pick([C.Ledger, mains[2]]));
   const anchors = [[.12, .15], [.85, .2], [.2, .85], [.82, .8], [.5, .5]].sort(() => Math.random() - .5);
   state.stops = colors.map((c, i) => ({ c, x: clamp(anchors[i][0] + (Math.random() - .5) * .3, 0, 1), y: clamp(anchors[i][1] + (Math.random() - .5) * .3, 0, 1) }));
   if (state.overlay === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
   if (state.overlay === 'off') state.overlay = 'mesh';
-  if (state.pattern !== 'off') state.patColor = pick([gray(1), col(fams[0], 100), col(fams[1], 200), col(fams[2], 300)]);
+  if (state.pattern !== 'off') state.patColor = pick([C.Paper, C.Receipt, C.Flow, C.Prompt]);
   state.seed = Math.random() * 100; state.selected = 0; changed();
 }
 
