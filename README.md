@@ -2,7 +2,7 @@
 
 A brand graphic generator. Turn any royalty-free photograph, or a plain brand color, into abstract brand-safe imagery: blur and liquify it, lay brand color over it, add a pattern and grain, and export a high-resolution JPG or PNG.
 
-Prototype. The palette holds the ten core brand colors; tints and shades will be added once the brand is final.
+Prototype. The palette is provisional until the master brand library is finalized.
 
 Live: https://ffgroup-8.github.io/melodream/
 
