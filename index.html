@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Dream Sequence</title>
+<title>Composer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -255,7 +255,7 @@
   <div class="panel-head">
     <div class="brand">
       <div class="eyebrow">Brand Graphic Generator</div>
-      <h1>Dream Sequence</h1>
+      <h1>Composer</h1>
     </div>
     <div class="chips" id="recipes"></div>
     <nav class="tabs" id="tabs" role="tablist">
@@ -790,7 +790,7 @@ function program(fragSrc) {
 
 function initGL() {
   gl = canvas.getContext('webgl2', { antialias: false, alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: false });
-  if (!gl) { toast('This browser does not support WebGL2, which Dream Sequence needs.', 8000); return false; }
+  if (!gl) { toast('This browser does not support WebGL2, which Composer needs.', 8000); return false; }
   floatOK = !!gl.getExtension('EXT_color_buffer_float');
   maxSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
   progs = { base: program(FRAG_BASE), gauss: program(FRAG_GAUSS), motion: program(FRAG_MOTION), comp: program(FRAG_COMP) };
@@ -1051,7 +1051,7 @@ async function exportImage() {
     const { blob, w, h, format } = await exportBlob(+state.exportSize);
     if (!blob) throw new Error('empty');
     const a = document.createElement('a'), url = URL.createObjectURL(blob);
-    a.href = url; a.download = `dream-sequence-${(state.recipe || 'custom').toLowerCase()}-${w}x${h}.${format}`;
+    a.href = url; a.download = `composer-${(state.recipe || 'custom').toLowerCase()}-${w}x${h}.${format}`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
     toast(`Exported ${w} × ${h} px ${format.toUpperCase()}`);
   } catch (e) {

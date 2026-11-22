@@ -1,4 +1,4 @@
-# Dream Sequence
+# Composer
 
 A brand graphic generator. Turn any royalty-free photograph, or a plain brand color, into abstract brand-safe imagery: blur and liquify it, lay brand color over it, add a pattern and grain, and export a high-resolution JPG or PNG.
 
