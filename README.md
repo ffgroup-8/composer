@@ -14,8 +14,8 @@ The tool opens on an empty frame that asks for a photo: **Add a photo** points t
 
 The four tabs are the layers, bottom to top:
 
-1. **Image**: the background. A photo (upload one, or search Unsplash), a solid brand color, a two-tone blend, or transparent. Pick a frame shape and drag the image to reframe it. *Image opacity* fades the photo into a brand color behind it. *Dream* blurs, streaks and liquifies it, from crystal clear to fully abstract.
-2. **Color**: a brand color layer over the background. A fold (a crisp or soft edge with color fading away from it), a gradient with draggable color dots, a two-tone blend, a solid color, or a tone map that recolors the image by brightness. The gradient library has twelve ready-made folds. The blend mode decides how color meets the image.
+1. **Image**: the background. A photo (upload one, or search Unsplash), a solid brand color, a two-tone blend, or transparent. Pick a frame shape and drag the image to reframe it. *Image opacity* fades the photo into a brand color behind it. *Treatment* softens the photo; motion and liquify are tucked underneath for more abstract looks.
+2. **Color**: a brand color layer over the background. A fold (a crisp or soft edge with color fading away from it), a gradient with draggable color dots, a two-tone blend, a solid color, or a tone map that recolors the image by brightness. The gradient library has twelve presets. With a photo loaded, each one recolors the photo in its colors (shadows take the darkest color, highlights the lightest) and adds a little softness and grain; the thumbnails show your photo in each. Without a photo, each preset is a fold. The blend mode decides how color meets the image.
 3. **Pattern**: dots, lines, grid, rings or contours in one brand color. *Variation* makes the shapes grow and shrink with organic noise or with the light and dark of the image.
 4. **Finish**: film grain and file format.
 

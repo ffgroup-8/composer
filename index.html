@@ -345,9 +345,13 @@
       </section>
 
       <section class="group" id="dreamGroup">
-        <h2>Dream</h2>
-        <div data-sliders="dream"></div>
-        <button class="btn small" id="reseed">New liquid pattern</button>
+        <h2>Treatment</h2>
+        <div data-sliders="soften"></div>
+        <details id="moveBox">
+          <summary>Motion and liquify</summary>
+          <div data-sliders="dream"></div>
+          <button class="btn small" id="reseed">New liquid pattern</button>
+        </details>
       </section>
     </div>
 
@@ -359,7 +363,7 @@
         <p class="hint" id="colorHint"></p>
         <div id="ovBody">
           <div id="libBox">
-            <div class="sub" style="margin-top:0">Gradient library</div>
+            <div class="sub" id="libLabel" style="margin-top:0">Gradient library</div>
             <div class="lib" id="lib"></div>
           </div>
           <div class="stops" id="stops"></div>
@@ -532,6 +536,11 @@ const span = (colors, a, b) => colors.map((c, i) => {
   const t = i / (colors.length - 1);
   return { c, x: +(a[0] + (b[0] - a[0]) * t).toFixed(3), y: +(a[1] + (b[1] - a[1]) * t).toFixed(3) };
 });
+/* A preset as a tone map: its colors, darkest to lightest, with repeats removed. */
+const toneStops = stops => stops.filter((s, i) => stops.findIndex(o => o.c === s.c) === i)
+  .map(s => ({ ...s })).sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
+/* The gentle softness and grain a photo gets the first time a preset recolors it. */
+const HOUSE = { blur: 14, grain: 26, grainSize: 30 };
 const LIBRARY = [
   { name: 'Dusk',   overlay: 'fold', curve: 40,  soft: 0,  gflow: 22, stops: span([core('Ledger'), core('Prompt'), col('Burgundy',600), core('Note'), core('Ledger')], [.28, .34], [.95, 1.0]) },
   { name: 'Canopy', overlay: 'fold', curve: 22,  soft: 0,  gflow: 20, stops: span([core('Settle'), col('Teal',500), core('Flow'), core('Receipt'), core('Paper')], [.62, .36], [.2, 1.05]) },
@@ -573,8 +582,8 @@ const SLIDERS = {
     { key: 'contrast', label: 'Contrast', min: -100, max: 100 },
     { key: 'sat', label: 'Saturation', min: -100, max: 100 },
   ],
+  soften: [ { key: 'blur', label: 'Soften', min: 0, max: 100 } ],
   dream: [
-    { key: 'blur', label: 'Blur', min: 0, max: 100 },
     { key: 'motion', label: 'Motion', min: 0, max: 100 },
     { key: 'angle', label: 'Motion angle', min: 0, max: 180, unit: '°' },
     { key: 'liquify', label: 'Liquify', min: 0, max: 100 },
@@ -610,7 +619,7 @@ const state = {
   blend: 'normal', opacity: 100,
   pattern: 'off', patColor: gray(1), patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   grain: 22, grainSize: 30,
-  format: 'jpg', exportSize: 4000, recipe: null, selected: 0,
+  format: 'jpg', exportSize: 4000, recipe: null, selected: 0, lib: null,
 };
 
 const $ = id => document.getElementById(id);
@@ -694,7 +703,7 @@ uniform sampler2D uBase; uniform vec2 uRes;
 uniform float uLiq, uLiqScale, uSeed;
 uniform int uBgNone, uOvMode, uCount, uBlend;
 uniform vec3 uCol[5]; uniform vec2 uPos[5]; uniform vec2 uOvDir;
-uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells, uCurve;
+uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells, uCurve; uniform vec2 uLevels;
 uniform int uPat, uPatFollow, uPatBlend; uniform vec3 uPatCol; uniform sampler2D uShape;
 uniform float uPatN, uPatSize, uPatRot, uPatFlow, uPatVary, uPatOpacity;
 
@@ -792,7 +801,7 @@ void main(){
 
     if (uOvMode != 4) {
       vec3 g;
-      if (uOvMode == 1) g = ramp(lum(base));
+      if (uOvMode == 1) g = ramp((lum(base) - uLevels.x) / max(uLevels.y - uLevels.x, 0.08));
       else if (uOvMode == 3) g = oklab2rgb(uCol[0]);
       else {
         vec2 gp = p;
@@ -847,7 +856,7 @@ void main(){
 
 let gl, progs, floatOK, maxSize, srcTex, shapeTex, targets = { w: 0, h: 0, float: false, a: null, b: null };
 const sourceCanvas = document.createElement('canvas');
-const src = { w: 3, h: 2 };
+const src = { w: 3, h: 2, lo: 0, hi: 1 };
 
 function program(fragSrc) {
   const mk = (type, s) => {
@@ -1024,6 +1033,7 @@ function draw(outW, outH) {
     gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos); gl.uniform2f(u('uOvDir'), od[0], od[1]);
     gl.uniform1f(u('uSoft'), s.soft / 100); gl.uniform1f(u('uGFlow'), s.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), s.opacity / 100);
     gl.uniform1f(u('uCurve'), s.curve / 100);
+    if (s.bg === 'photo') gl.uniform2f(u('uLevels'), src.lo, src.hi); else gl.uniform2f(u('uLevels'), 0, 1);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, shapeTex); gl.uniform1i(u('uShape'), 1); gl.activeTexture(gl.TEXTURE0);
     gl.uniform1f(u('uGrain'), s.grain / 100 * 0.4); gl.uniform1f(u('uGrainCells'), 1800 - s.grainSize / 100 * 1400);
     gl.uniform1i(u('uPat'), PAT_INDEX[s.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[s.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[s.patBlend]);
@@ -1056,10 +1066,18 @@ function setSource(drawable, w, h, name, credit) {
   sourceCanvas.width = Math.round(w * s); sourceCanvas.height = Math.round(h * s);
   sourceCanvas.getContext('2d').drawImage(drawable, 0, 0, sourceCanvas.width, sourceCanvas.height);
   src.w = sourceCanvas.width; src.h = sourceCanvas.height;
+  {
+    // Darkest and lightest tones of this photo (3rd and 97th percentile), so a tone map always spans its full range of colors.
+    const n = 64, c = document.createElement('canvas'); c.width = c.height = n;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(sourceCanvas, 0, 0, n, n);
+    const d = x.getImageData(0, 0, n, n).data, l = [];
+    for (let i = 0; i < d.length; i += 4) l.push((0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255);
+    l.sort((a, b) => a - b); src.lo = l[Math.floor(l.length * .03)]; src.hi = l[Math.floor(l.length * .97)];
+  }
   uploadSource(); state.cx = state.cy = .5; state.zoom = 100;
   if (name) { hasPhoto = true; $('fileName').textContent = name; Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); }
   const cr = $('credit'); cr.hidden = !credit; cr.innerHTML = credit || '';
-  syncUI(); layout();
+  state.lib = null; renderLibrary(); syncUI(); layout();
 }
 function loadFile(file) {
   if (!file || !file.type.startsWith('image/')) { toast('That file is not an image.'); return; }
@@ -1156,14 +1174,14 @@ async function exportImage() {
 /* ---------- UI ---------- */
 let toastTimer;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
-function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); syncStage(); }
+function custom() { state.recipe = null; state.lib = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); syncStage(); }
 /* Stage messages. Until a photo is loaded the frame is an empty box that asks for one, and the
    first chip reads Upload; after that it reads Original and takes the photo back to untouched. */
 function syncStage() {
   const photo = state.bg === 'photo', empty = photo && !hasPhoto, original = state.recipe === 'Original';
   frame.classList.toggle('is-empty', empty); $('empty').hidden = !empty;
   const badge = $('badge');
-  badge.textContent = 'Original photo · pick a recipe or adjust a control to begin';
+  badge.textContent = 'Original photo · open Color to see it in brand colors';
   badge.hidden = !photo || empty || !original;
   $('compare').hidden = !photo || empty || original;
   const og = $('ogChip'); og.textContent = hasPhoto ? 'Original' : 'Upload'; og.setAttribute('aria-pressed', hasPhoto ? original : empty);
@@ -1249,9 +1267,14 @@ function buildUI() {
   }
   const sh = document.createElement('button'); sh.className = 'chip accent'; sh.textContent = 'Shuffle colors'; sh.onclick = shuffle; rec.appendChild(sh);
 
-  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; pop.hidden = true; syncUI(); });
-  chipRow('bgTypes', BG_TYPES, 'bg', v => { if (v === 'none' && state.pattern === 'off') { state.pattern = 'dots'; state.tab = 'pattern'; } layoutSoon(); });
-  chipRow('ovTypes', OV_TYPES, 'overlay', v => { if (v === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]); });
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { state.tab = b.dataset.tab; pop.hidden = true; if (state.tab === 'color') { renderLibrary(); layout(); } syncUI(); });
+  chipRow('bgTypes', BG_TYPES, 'bg', v => { if (v === 'none' && state.pattern === 'off') { state.pattern = 'dots'; state.tab = 'pattern'; } renderLibrary(); layoutSoon(); });
+  chipRow('ovTypes', OV_TYPES, 'overlay', v => {
+    const g = LIBRARY[state.lib], lib = state.lib;
+    if (g && v === 'fold') Object.assign(state, foldOf(g)); else if (g && v === 'tone') state.stops = toneStops(g.stops);
+    else if (v === 'tone') state.stops.sort((a, b) => hexToOklab(a.c)[0] - hexToOklab(b.c)[0]);
+    if (g && (v === 'fold' || v === 'tone')) setTimeout(() => state.lib = lib, 0);
+  });
   chipRow('patTypes', PAT_TYPES, 'pattern');
   const asp = $('aspects');
   for (const name of Object.keys(ASPECTS)) {
@@ -1289,18 +1312,32 @@ function buildUI() {
   LIBRARY.forEach((g, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.title = g.name; b.setAttribute('aria-label', 'Gradient: ' + g.name);
     const c = document.createElement('canvas'); c.width = 150; c.height = 100; c.id = 'lib-' + i; b.appendChild(c);
-    b.onclick = () => { Object.assign(state, { overlay: g.overlay, soft: g.soft ?? state.soft, gflow: g.gflow ?? state.gflow, ovAngle: g.ovAngle ?? state.ovAngle, curve: g.curve ?? 0, stops: g.stops.map(s => ({ ...s })), selected: 0 }); changed(); };
+    b.onclick = () => {
+      if (onPhoto()) {
+        Object.assign(state, { overlay: 'tone', stops: toneStops(g.stops), blend: 'normal', opacity: 100, selected: 0 });
+        if (!state.blur && !state.motion && !state.liquify) state.blur = HOUSE.blur;
+        if (!state.grain) { state.grain = HOUSE.grain; state.grainSize = HOUSE.grainSize; }
+      } else Object.assign(state, foldOf(g));
+      changed(); state.lib = i;
+    };
     lib.appendChild(b);
   });
 }
 let layoutTimer; function layoutSoon() { clearTimeout(layoutTimer); layoutTimer = setTimeout(layout, 0); }
 
-/* Draw each library gradient through the real pipeline so the thumbnail is exact. */
+const onPhoto = () => state.bg === 'photo' && hasPhoto;
+const foldOf = g => ({ overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, curve: g.curve ?? 0, stops: g.stops.map(s => ({ ...s })), selected: 0 });
+/* Draw each preset through the real pipeline so the thumbnail is exact: on a photo it shows that
+   photo recolored by the preset, otherwise the fold itself. */
 function renderLibrary() {
-  const keep = { ...state, stops: state.stops }; busy = true;
+  if (!gl) return;
+  const keep = { ...state }, photo = onPhoto(); busy = true;
   LIBRARY.forEach((g, i) => {
-    Object.assign(state, { bg: 'solid', bgA: gray(6), blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100,
-      overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, curve: g.curve ?? 0, stops: g.stops });
+    if (photo) {
+      Object.assign(state, { aspect: '3:2', overlay: 'tone', stops: toneStops(g.stops), blend: 'normal', opacity: 100, pattern: 'off', grain: 0,
+        blur: keep.blur || keep.motion || keep.liquify ? keep.blur : HOUSE.blur });
+      clampCenter();
+    } else Object.assign(state, foldOf(g), { bg: 'solid', bgA: gray(6), blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100 });
     canvas.width = 150; canvas.height = 100; draw(150, 100);
     $('lib-' + i).getContext('2d').drawImage(canvas, 0, 0);
   });
@@ -1360,7 +1397,7 @@ const OV_HINTS = {
   mesh: 'Pick a color, choose its brand shade, then drag the dots on the image to place each color.',
   linear: 'A simple blend from the first color to the last. Use Angle to turn it.',
   solid: 'One flat brand color over the image. The blend mode decides how it mixes.',
-  tone: 'The image is recolored by brightness: first color fills the shadows, last color the highlights.',
+  tone: 'The image is recolored by brightness: the first color fills the shadows, the last color the highlights. Pick a preset below to recolor it in one step.',
   off: 'No color layer. The background shows as it is.',
 };
 function syncUI() {
@@ -1381,7 +1418,8 @@ function syncUI() {
   syncStage();
   $('credit').hidden = !photo || !$('credit').innerHTML;
 
-  $('ovBody').hidden = none; $('libBox').hidden = s.overlay === 'tone' || s.overlay === 'solid';
+  $('ovBody').hidden = none; $('libBox').hidden = s.overlay === 'solid';
+  $('libLabel').textContent = onPhoto() ? 'Gradient library · your photo in each' : 'Gradient library';
   for (const id of ['stops', 'stopName', 'palette', 'blendBox']) $(id).hidden = s.overlay === 'off';
   $('colorHint').textContent = none ? 'The color layer needs a background. Choose Photo, Solid or Two-tone on the Image tab.' : OV_HINTS[s.overlay];
   $('patBody').hidden = s.pattern === 'off';
