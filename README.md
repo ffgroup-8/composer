@@ -10,7 +10,7 @@ Live: https://ffgroup-8.github.io/composer/
 
 Open the link, or open `index.html` in a browser (Chrome, Safari, Edge or Firefox). No install and no build step. Images you upload never leave the browser.
 
-The tool opens on an empty frame that asks for a photo: **Add a photo** points to the upload and Unsplash controls, or drop an image on the frame. A new photo always opens untouched, so you see it as it is before changing anything. **Recipes** along the top are complete looks. The first chip reads **Upload** until a photo is loaded; after that it reads **Original** and takes the photo back to untouched. **Shuffle colors** makes a new brand-safe combination. Once a photo has been changed, press and hold **Hold to see original** above the image to compare.
+The tool opens on an empty frame that asks for a photo: **Add a photo** points to the upload and Unsplash controls, or drop an image on the frame. A new photo always opens untouched, so you see it as it is before changing anything. **Recipes** along the top are complete looks. The first chip reads **Upload** until a photo is loaded; after that it reads **Original** and takes the photo back to untouched. **Shuffle colors** makes a new brand-safe combination. Once a photo has been changed, press and hold **Hold to see original** above the image to compare. **Start over**, at the top left of the image, clears the photo and every setting and returns to the empty frame; it asks once before clearing.
 
 The four tabs are the layers, bottom to top:
 

@@ -254,6 +254,7 @@
   }
   .compare:hover { border-color: var(--muted); }
   .compare.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .compare.restart { right: auto; left: 18px; }
   .badge {
     position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -435,6 +436,7 @@
 
 <main class="stage" id="stage">
   <div class="badge" id="badge"></div>
+  <button class="compare restart" id="restart" type="button" hidden>Start over</button>
   <button class="compare" id="compare" hidden>Hold to see original</button>
   <div id="frame">
     <canvas id="gl"></canvas>
@@ -1183,11 +1185,21 @@ function syncStage() {
   const badge = $('badge');
   badge.textContent = 'Original photo · open Color to see it in brand colors';
   badge.hidden = !photo || empty || !original;
-  $('compare').hidden = !photo || empty || original;
+  $('compare').hidden = !photo || empty || original; $('restart').hidden = empty;
   const og = $('ogChip'); og.textContent = hasPhoto ? 'Original' : 'Upload'; og.setAttribute('aria-pressed', hasPhoto ? original : empty);
   const ex = $('exportBtn'); ex.classList.toggle('idle', empty); if (!ex.textContent.startsWith('Rendering')) ex.disabled = empty;
 }
 function applyOriginal() { Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); syncUI(); layout(); }
+/* Start over: clear the photo and every setting, back to the empty frame the tool opens on. */
+let INITIAL = null;
+function restart() {
+  Object.assign(state, JSON.parse(JSON.stringify(INITIAL)));
+  hasPhoto = false; sourceCanvas.width = 300; sourceCanvas.height = 150; Object.assign(src, { w: 3, h: 2, lo: 0, hi: 1 }); uploadSource();
+  $('fileName').textContent = 'No photo yet'; const cr = $('credit'); cr.innerHTML = ''; cr.hidden = true;
+  document.querySelectorAll('#usGrid button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  pop.hidden = true; document.querySelector('.panel-scroll').scrollTop = 0;
+  renderLibrary(); syncUI(); layout();
+}
 /* Take the person to the photo controls and make them obvious. */
 function promptUpload() {
   state.tab = 'image'; state.bg = 'photo'; pop.hidden = true; syncUI(); layout();
@@ -1258,6 +1270,13 @@ function buildUI() {
   const og = document.createElement('button'); og.className = 'chip'; og.id = 'ogChip'; og.textContent = 'Upload';
   og.onclick = () => hasPhoto ? applyOriginal() : promptUpload(); rec.appendChild(og);
   $('emptyBtn').onclick = promptUpload;
+  // Start over asks once before clearing: the first click arms it for three seconds, the second click clears.
+  const rs = $('restart'); let rsTimer;
+  const disarm = () => { clearTimeout(rsTimer); delete rs.dataset.armed; rs.textContent = 'Start over'; rs.classList.remove('on'); };
+  rs.onclick = () => {
+    if (rs.dataset.armed) { disarm(); restart(); return; }
+    rs.dataset.armed = '1'; rs.textContent = 'Clear everything?'; rs.classList.add('on'); rsTimer = setTimeout(disarm, 3000);
+  };
   const cmp = $('compare'), setPeek = on => { if (peek === on) return; peek = on; cmp.classList.toggle('on', on); $('handles').style.visibility = on ? 'hidden' : ''; invalidate(); };
   cmp.addEventListener('pointerdown', e => { e.preventDefault(); cmp.setPointerCapture(e.pointerId); setPeek(true); });
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cmp.addEventListener(t, () => setPeek(false)));
@@ -1484,6 +1503,7 @@ buildUI();
 if (initGL()) {
   uploadSource();   // placeholder until a photo is chosen
   state.stops = LIBRARY[0].stops.map(s => ({ ...s }));
+  INITIAL = JSON.parse(JSON.stringify(state));
   renderLibrary(); syncUI(); layout();
 }
 window.DreamSequence = { state, exportBlob, invalidate, loadFile, loadRemote, setSource, syncUI, searchUnsplash };
