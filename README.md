@@ -4,7 +4,7 @@ A brand graphic generator. Turn any royalty-free photograph, or a plain brand co
 
 Prototype. The palette follows the current brand colors and may still change.
 
-Live: https://ffgroup-8.github.io/melodream/
+Live: https://ffgroup-8.github.io/composer/
 
 ## Use it
 
