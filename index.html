@@ -110,6 +110,15 @@
   }
   .btn:hover { border-color: var(--muted); }
   .btn.small { padding: 6px 10px; font-size: 12px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; padding: 11px 18px; }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  /* Draws the eye to the photo controls when someone asks where to start. */
+  #bgPhoto { border-radius: 6px; outline: 2px solid transparent; outline-offset: 10px; }
+  #bgPhoto.nudge { animation: nudge 2s ease-out; }
+  @keyframes nudge {
+    0%, 55% { outline-color: var(--accent); box-shadow: 0 0 0 10px rgba(240, 103, 67, .16); }
+    100% { outline-color: transparent; box-shadow: 0 0 0 10px rgba(240, 103, 67, 0); }
+  }
   .file-row { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
   .file-name { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .link { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
@@ -172,6 +181,7 @@
   .scale:last-child { margin-bottom: 0; }
   .scale.ten { grid-template-columns: repeat(10, 1fr); }
   .scale.twelve { grid-template-columns: repeat(12, 1fr); margin-top: 8px; }
+  .scale.core { margin-bottom: 8px; }
   .sw { aspect-ratio: 1; border: 0; border-radius: 4px; cursor: pointer; padding: 0; position: relative; box-shadow: inset 0 0 0 1px rgba(var(--shadow), .08); }
   .sw:hover { transform: scale(1.12); z-index: 1; }
   .sw[aria-pressed="true"]::after { content: ""; position: absolute; inset: -3px; border: 1.5px solid var(--text); border-radius: 6px; }
@@ -200,6 +210,7 @@
   }
   .export-btn:hover { background: var(--accent-hover); }
   .export-btn:disabled { opacity: .6; cursor: progress; }
+  .export-btn.idle:disabled { opacity: .35; cursor: not-allowed; }
 
   /* ---------- Stage ---------- */
   .stage { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100vh; }
@@ -214,6 +225,14 @@
     background: repeating-conic-gradient(#1C2023 0% 25%, #2C2E2F 0% 50%) 0 0 / 20px 20px;
   }
   #frame.panning { cursor: grabbing; }
+  /* Nothing loaded yet: the frame becomes an empty box that asks for a photo. */
+  #frame.is-empty { box-shadow: none; background: transparent; cursor: default; border: 1.5px dashed var(--line-2); border-radius: 18px; }
+  #frame.is-empty canvas, #frame.is-empty #handles { visibility: hidden; }
+  .empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; }
+  .empty svg { width: 34px; height: 34px; color: var(--muted); margin-bottom: 6px; }
+  .empty h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  .empty p { color: var(--muted); font-size: 14px; max-width: 320px; margin-bottom: 10px; }
+  .empty small { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
   #frame canvas { width: 100%; height: 100%; display: block; }
   #handles { position: absolute; inset: 0; pointer-events: none; }
   .handle {
@@ -282,7 +301,7 @@
         <div id="bgPhoto">
           <div class="file-row">
             <button class="btn" id="pick">Upload image</button>
-            <span class="file-name" id="fileName">Sample scene</span>
+            <span class="file-name" id="fileName">No photo yet</span>
             <input type="file" id="file" accept="image/*" hidden>
           </div>
           <div class="sub" style="margin-top:0">Search Unsplash</div>
@@ -346,11 +365,13 @@
           <div class="stop-name" id="stopName"></div>
           <div class="palette" id="palette"></div>
           <div data-sliders="overlay"></div>
-          <div class="row">
-            <div class="row-head"><label for="blend">Blend mode</label></div>
-            <select id="blend"></select>
+          <div id="blendBox">
+            <div class="row">
+              <div class="row-head"><label for="blend">Blend mode</label></div>
+              <select id="blend"></select>
+            </div>
+            <div data-sliders="blend"></div>
           </div>
-          <div data-sliders="blend"></div>
         </div>
       </section>
     </div>
@@ -413,6 +434,13 @@
   <div id="frame">
     <canvas id="gl"></canvas>
     <div id="handles"></div>
+    <div class="empty" id="empty" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <h2>Start with a photo</h2>
+      <p>Upload your own or search Unsplash, then choose a recipe or build your own look.</p>
+      <button class="btn primary" id="emptyBtn" type="button">Add a photo</button>
+      <small>or drop an image here</small>
+    </div>
   </div>
   <div class="credit" id="credit" hidden></div>
   <div class="stage-note" id="stageNote"></div>
@@ -421,9 +449,10 @@
 
 <script>
 /* =====================================================================
-   BRAND PALETTE (provisional)
-   The only colors this tool can produce. Swap these values when the
-   master brand library is finalized; nothing else needs to change.
+   BRAND PALETTE
+   The only colors this tool can produce. `core` is the ten brand colors;
+   `scales` are the shade ranges built around them. Change the values
+   here and every swatch, recipe and preset follows.
    ===================================================================== */
 const BRAND = {
   scales: [
@@ -433,8 +462,9 @@ const BRAND = {
     { name: 'Blue',     steps: ['#EFF4FD','#D5E4F8','#AECCF1','#7FAAE7','#4F88DB','#256ECC','#1F5FB2','#1D5599','#133464','#0D2141'] },
   ],
   gray: ['#FFFFFF','#E7E7E7','#CDCDCD','#B6B6B6','#9D9D9D','#868686','#707070','#5A5A5A','#444648','#2C2E2F','#1C2023','#0B0F12'],
-  /* The steps that are the core brand colors, by their brand names. */
-  core: { Note: '#620A28', Ledger: '#3F0819', Prompt: '#F06743', Flow: '#B1EBE8', Settle: '#1F5A52', Link: '#1D5599' },
+  /* The ten core brand colors, by their brand names. Six of them are also steps in the ranges above. */
+  core: { Note: '#620A28', Ledger: '#3F0819', Prompt: '#F06743', Receipt: '#FFF1E5', Settle: '#1F5A52',
+          Flow: '#B1EBE8', Paid: '#ABEBAB', Link: '#1D5599', Paper: '#FEFCFA', Ink: '#171B22' },
 };
 
 /* Unsplash search (free tier: 50 searches an hour, shared by everyone on the link).
@@ -448,9 +478,10 @@ BRAND.gray.forEach((h, i) => COLOR_NAMES[h] = 'Grayscale ' + (i + 1));
 Object.entries(BRAND.core).forEach(([name, h]) => COLOR_NAMES[h] = name);
 const col = (scale, step) => BRAND.scales.find(s => s.name === scale).steps[STEP_LABELS.indexOf(step)];
 const gray = n => BRAND.gray[n - 1];
+const core = name => BRAND.core[name];
 
 /* ---------- Recipes: full looks built only from brand colors ---------- */
-const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, bright: 0, contrast: 0, sat: 0 };
+const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, curve: 0, bright: 0, contrast: 0, sat: 0 };
 /* The untouched photo: every effect off. New photos open in this state. */
 const ORIGINAL = { blur: 0, motion: 0, liquify: 0, overlay: 'off', pattern: 'off', grain: 0, bright: 0, contrast: 0, sat: 0 };
 const RECIPES = {
@@ -490,31 +521,40 @@ const RECIPES = {
     blur: 0, motion: 0, liquify: 0, grain: 26, grainSize: 30,
     pattern: 'contours', patColor: col('Orange',300), patScale: 40, patSize: 22, patAngle: 0, patFlow: 20, patVary: 0, patFollow: 'noise', patOpacity: 85, patBlend: 'normal',
   },
-  Score: {
-    bg: 'linear', bgA: col('Teal',900), bgB: col('Blue',900), bgAngle: 30, overlay: 'off',
-    blur: 0, motion: 0, liquify: 0, grain: 18, grainSize: 30,
-    pattern: 'notes', patColor: col('Teal',300), patScale: 26, patSize: 85, patAngle: 0, patFlow: 0, patVary: 70, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
-  },
 };
 
-/* ---------- Gradient library: color layers only, applied over whatever is underneath ---------- */
+/* ---------- Gradient library: color layers only, applied over whatever is underneath ----------
+   Each preset is a Fold: the first color is the solid side, and the others fade away from an
+   edge that can be crisp or soft. `span` lays the colors out from the edge (a) to where the fade ends (b), as
+   fractions of the frame. */
+const span = (colors, a, b) => colors.map((c, i) => {
+  const t = i / (colors.length - 1);
+  return { c, x: +(a[0] + (b[0] - a[0]) * t).toFixed(3), y: +(a[1] + (b[1] - a[1]) * t).toFixed(3) };
+});
 const LIBRARY = [
-  { name: 'Tide', overlay: 'mesh', soft: 55, gflow: 25, stops: RECIPES.Tide.stops },
-  { name: 'Ember', overlay: 'mesh', soft: 50, gflow: 30, stops: RECIPES.Ember.stops },
-  { name: 'Lagoon', overlay: 'mesh', soft: 60, gflow: 40, stops: RECIPES.Lagoon.stops },
-  { name: 'Mist', overlay: 'mesh', soft: 65, gflow: 35, stops: RECIPES.Mist.stops },
-  { name: 'Deep', overlay: 'mesh', soft: 60, gflow: 45, stops: RECIPES.Signal.stops },
-  { name: 'Bloom', overlay: 'mesh', soft: 45, gflow: 50, stops: [ {c: col('Burgundy',200), x: .15, y: .2}, {c: col('Orange',400), x: .85, y: .3}, {c: col('Burgundy',600), x: .5, y: .95}, {c: gray(1), x: .5, y: .05} ] },
-  { name: 'Dawn', overlay: 'linear', ovAngle: 70, gflow: 20, stops: [ {c: col('Blue',700), x: .2, y: .8}, {c: col('Burgundy',400), x: .5, y: .5}, {c: col('Orange',200), x: .8, y: .2} ] },
-  { name: 'Shore', overlay: 'linear', ovAngle: 20, gflow: 30, stops: [ {c: col('Teal',700), x: .2, y: .5}, {c: col('Teal',200), x: .8, y: .5} ] },
+  { name: 'Dusk',   overlay: 'fold', curve: 40,  soft: 0,  gflow: 22, stops: span([core('Ledger'), core('Prompt'), col('Burgundy',600), core('Note'), core('Ledger')], [.28, .34], [.95, 1.0]) },
+  { name: 'Canopy', overlay: 'fold', curve: 22,  soft: 0,  gflow: 20, stops: span([core('Settle'), col('Teal',500), core('Flow'), core('Receipt'), core('Paper')], [.62, .36], [.2, 1.05]) },
+  { name: 'Dune',   overlay: 'fold', curve: -35, soft: 0,  gflow: 55, stops: span([col('Orange',400), core('Receipt'), col('Orange',300), core('Prompt'), core('Ledger')], [.38, .52], [1.05, 1.1]) },
+  { name: 'Reef',   overlay: 'fold', curve: 50,  soft: 0,  gflow: 14, stops: span([col('Blue',900), col('Teal',500), col('Teal',700), col('Blue',900)], [.22, .6], [1.0, 0]) },
+  { name: 'Bloom',  overlay: 'fold', curve: 60,  soft: 50, gflow: 15, stops: span([core('Note'), col('Burgundy',200), col('Burgundy',100), col('Blue',50)], [.2, .5], [.62, .04]) },
+  { name: 'Glade',  overlay: 'fold', curve: -40, soft: 0,  gflow: 12, stops: span([col('Teal',600), core('Paper'), core('Flow'), col('Teal',500), col('Teal',600)], [.56, .76], [.04, 0]) },
+  { name: 'Coral',  overlay: 'fold', curve: 25,  soft: 0,  gflow: 30, stops: span([core('Prompt'), core('Ledger'), core('Note'), col('Burgundy',400)], [.55, .36], [.1, 1.0]) },
+  { name: 'Ridge',  overlay: 'fold', curve: -45, soft: 0,  gflow: 25, stops: span([core('Link'), col('Blue',200), col('Blue',500), col('Blue',900)], [.66, .4], [0, 1.02]) },
+  { name: 'Dawn',   overlay: 'fold', curve: -30, soft: 0,  gflow: 18, stops: span([core('Receipt'), col('Orange',300), col('Orange',100), core('Paper')], [.7, .62], [.1, .04]) },
+  { name: 'Shore',  overlay: 'fold', curve: 25,  soft: 0,  gflow: 16, stops: span([core('Flow'), core('Paper'), col('Blue',100), col('Blue',300)], [.4, .7], [1.0, 0]) },
+  { name: 'Moss',   overlay: 'fold', curve: 50,  soft: 40, gflow: 12, stops: span([core('Settle'), core('Paid'), col('Teal',300), col('Teal',600)], [.35, .4], [.95, .95]) },
+  { name: 'Haze',   overlay: 'fold', curve: -50, soft: 70, gflow: 20, stops: span([core('Receipt'), col('Orange',200), col('Burgundy',200), col('Burgundy',100)], [.5, .55], [.95, 0]) },
 ];
 
 const ASPECTS = { 'Original': null, '16:9': 16/9, '3:2': 3/2, '1:1': 1, '4:5': 4/5, '9:16': 9/16 };
 const BG_TYPES = [ ['photo','Photo'], ['solid','Solid'], ['linear','Two-tone'], ['none','Transparent'] ];
-const OV_TYPES = [ ['mesh','Gradient'], ['linear','Two-tone'], ['solid','Solid'], ['tone','Tone map'], ['off','Off'] ];
-const OV_INDEX = { mesh: 0, tone: 1, linear: 2, solid: 3, off: 4 };
-const PAT_TYPES = [ ['off','Off'], ['dots','Dots'], ['lines','Lines'], ['grid','Grid'], ['rings','Rings'], ['contours','Contours'], ['notes','Notes'] ];
-const PAT_INDEX = { off: 0, dots: 1, lines: 2, grid: 3, rings: 4, contours: 5, notes: 6 };
+const OV_TYPES = [ ['fold','Fold'], ['mesh','Gradient'], ['linear','Two-tone'], ['solid','Solid'], ['tone','Tone map'], ['off','Off'] ];
+const OV_INDEX = { mesh: 0, tone: 1, linear: 2, solid: 3, off: 4, fold: 5 };
+/* Custom pattern shape: one SVG path and its bounding box [x, y, width, height]. Leave the path empty to hide the option. */
+const SHAPE = { path: '', box: [0, 0, 158.98, 138.91] };
+const PAT_TYPES = [ ['off','Off'], ['dots','Dots'], ['lines','Lines'], ['grid','Grid'], ['rings','Rings'], ['contours','Contours'] ];
+if (SHAPE.path) PAT_TYPES.push(['symbol','Symbol']);
+const PAT_INDEX = { off: 0, dots: 1, lines: 2, grid: 3, rings: 4, contours: 5, symbol: 6 };
 const BLENDS = [ ['normal','Normal'], ['overlay','Overlay'], ['softlight','Soft Light'], ['hardlight','Hard Light'], ['screen','Screen'], ['multiply','Multiply'], ['lighten','Lighten'], ['darken','Darken'], ['color','Color'] ];
 const BLEND_INDEX = { normal: 0, overlay: 1, softlight: 2, hardlight: 3, screen: 4, multiply: 5, lighten: 6, darken: 7, color: 8 };
 const FOLLOW_INDEX = { noise: 0, light: 1, dark: 2 };
@@ -536,9 +576,10 @@ const SLIDERS = {
     { key: 'liquify', label: 'Liquify', min: 0, max: 100 },
   ],
   overlay: [
-    { key: 'soft', label: 'Softness', min: 0, max: 100, show: s => s.overlay === 'mesh' },
+    { key: 'soft', label: 'Softness', min: 0, max: 100, show: s => s.overlay === 'mesh' || s.overlay === 'fold' },
+    { key: 'curve', label: 'Curve', min: -100, max: 100, show: s => s.overlay === 'fold' },
     { key: 'ovAngle', label: 'Angle', min: 0, max: 360, unit: '°', show: s => s.overlay === 'linear' },
-    { key: 'gflow', label: 'Flow', min: 0, max: 100, show: s => s.overlay === 'mesh' || s.overlay === 'linear' },
+    { key: 'gflow', label: 'Flow', min: 0, max: 100, show: s => ['mesh', 'linear', 'fold'].includes(s.overlay) },
   ],
   blend: [ { key: 'opacity', label: 'Opacity', min: 0, max: 100, unit: '%' } ],
   pattern: [
@@ -561,11 +602,11 @@ const state = {
   aspect: 'Original', zoom: 100, cx: .5, cy: .5,
   bright: 0, contrast: 0, sat: 0,
   blur: 55, motion: 45, angle: 60, liquify: 0, seed: 7.3,
-  overlay: 'mesh', stops: [], soft: 55, gflow: 25, ovAngle: 45,
-  blend: 'screen', opacity: 100,
+  overlay: 'off', stops: [], soft: 55, gflow: 25, ovAngle: 45, curve: 0,
+  blend: 'normal', opacity: 100,
   pattern: 'off', patColor: gray(1), patScale: 40, patSize: 45, patAngle: 0, patFlow: 0, patVary: 0, patFollow: 'noise', patOpacity: 100, patBlend: 'normal',
   grain: 22, grainSize: 30,
-  format: 'jpg', exportSize: 4000, recipe: 'Tide', selected: 0,
+  format: 'jpg', exportSize: 4000, recipe: null, selected: 0,
 };
 
 const $ = id => document.getElementById(id);
@@ -648,8 +689,8 @@ uniform sampler2D uBase; uniform vec2 uRes;
 uniform float uLiq, uLiqScale, uSeed;
 uniform int uBgNone, uOvMode, uCount, uBlend;
 uniform vec3 uCol[5]; uniform vec2 uPos[5]; uniform vec2 uOvDir;
-uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells;
-uniform int uPat, uPatFollow, uPatBlend; uniform vec3 uPatCol;
+uniform float uSoft, uGFlow, uOpacity, uGrain, uGrainCells, uCurve;
+uniform int uPat, uPatFollow, uPatBlend; uniform vec3 uPatCol; uniform sampler2D uShape;
 uniform float uPatN, uPatSize, uPatRot, uPatFlow, uPatVary, uPatOpacity;
 
 float hash21(vec2 p){
@@ -664,6 +705,8 @@ float vnoise(vec2 p){
 }
 float fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.2); a *= 0.5; } return s; }
 vec2 flow(vec2 p){ return vec2(fbm(p), fbm(p + vec2(41.3, 27.9))) - 0.47; }
+/* One smooth octave: bends a fold's edge into a long clean curve instead of a ragged one. */
+vec2 sflow(vec2 p){ return vec2(vnoise(p), vnoise(p + vec2(41.3, 27.9))) - 0.5; }
 ${OKLAB}
 float lum(vec3 c){ return dot(c, vec3(0.3, 0.59, 0.11)); }
 vec3 clipColor(vec3 c){
@@ -688,6 +731,13 @@ vec3 ramp(float t){
   float x = clamp(t, 0.0, 1.0) * float(uCount - 1);
   int i = clamp(int(floor(x)), 0, uCount - 2);
   return oklab2rgb(mix(uCol[i], uCol[i + 1], x - float(i)));
+}
+/* Fold: colors 1 to n fade away from the edge; color 0 is the solid side. */
+vec3 foldLab(float t){
+  if (uCount < 3) return uCol[uCount - 1];
+  float x = clamp(t, 0.0, 1.0) * float(uCount - 2);
+  int i = clamp(int(floor(x)), 0, uCount - 3);
+  return mix(uCol[i + 1], uCol[i + 2], x - float(i));
 }
 
 /* Coverage of the pattern at this pixel, 0 to 1. */
@@ -714,10 +764,8 @@ float patternCov(vec2 p, vec2 asp, vec3 base){
   else if (uPat == 3) { float L = 0.44 * size, t = L * 0.26; vec2 a = abs(f); d = min(max(a.x - L, a.y - t), max(a.x - t, a.y - L)); }
   else if (uPat == 4) d = abs(fract(length(q)) - 0.5) - 0.45 * size;
   else {
-    vec2 a = vec2(0.47, 0.34) * size, b = vec2(0.2, 0.29) * size;
-    vec2 g = mat2(0.9613, 0.2756, -0.2756, 0.9613) * f;
-    float outer = (length(f / a) - 1.0) * a.y, inner = (length(g / b) - 1.0) * b.x;
-    d = max(outer, -inner);
+    float sc = max(size, 0.02) * 0.96; vec2 uvs = f / sc + 0.5;
+    d = (textureLod(uShape, clamp(uvs, 0.0, 1.0), 0.0).r + length(max(abs(uvs - 0.5) - 0.5, 0.0))) * sc;
   }
   return 1.0 - smoothstep(-aa, aa, d);
 }
@@ -743,7 +791,10 @@ void main(){
       else if (uOvMode == 3) g = oklab2rgb(uCol[0]);
       else {
         vec2 gp = p;
-        if (uGFlow > 0.0) { vec2 q = p * 1.6 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0); gp += flow(q + 2.0 * flow(q)) * uGFlow; }
+        if (uGFlow > 0.0) {
+          if (uOvMode == 5) gp += sflow(p * 1.15 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0)) * uGFlow * 0.9;
+          else { vec2 q = p * 1.6 + uSeed * vec2(1.3, 4.1) + vec2(9.0, 3.0); gp += flow(q + 2.0 * flow(q)) * uGFlow; }
+        }
         if (uOvMode == 0) {
           float k = mix(3.6, 1.0, uSoft);
           vec3 acc = vec3(0.0); float ws = 0.0;
@@ -753,6 +804,16 @@ void main(){
             acc += uCol[i] * w; ws += w;
           }
           g = oklab2rgb(acc / ws);
+        } else if (uOvMode == 5) {
+          vec2 A = uPos[0] * asp, ab = uPos[uCount - 1] * asp - A;
+          float L = max(length(ab), 0.02), t; vec2 dir = ab / L;
+          if (abs(uCurve) < 0.02) t = dot(gp - A, dir) / L;
+          else {
+            float R = 0.45 / pow(abs(uCurve), 1.5);
+            t = uCurve > 0.0 ? (R - length(gp - (A + dir * R))) / L : (length(gp - (A - dir * R)) - R) / L;
+          }
+          float w = max(uSoft * uSoft * 0.6, fwidth(t) * 0.75);
+          g = oklab2rgb(mix(uCol[0], foldLab(t), smoothstep(-w, w, t)));
         } else {
           float ext = abs(uOvDir.x) * asp.x + abs(uOvDir.y) * asp.y;
           g = ramp(dot(gp - 0.5 * asp, uOvDir) / ext + 0.5);
@@ -779,7 +840,7 @@ void main(){
   o = vec4(c * alpha, alpha);
 }`;
 
-let gl, progs, floatOK, maxSize, srcTex, targets = { w: 0, h: 0, float: false, a: null, b: null };
+let gl, progs, floatOK, maxSize, srcTex, shapeTex, targets = { w: 0, h: 0, float: false, a: null, b: null };
 const sourceCanvas = document.createElement('canvas');
 const src = { w: 3, h: 2 };
 
@@ -807,9 +868,48 @@ function initGL() {
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-  srcTex = gl.createTexture();
+  srcTex = gl.createTexture(); shapeTex = buildShapeTexture();
   targets = { w: 0, h: 0, float: false, a: null, b: null };
   return true;
+}
+
+/* The custom shape as a distance field (how far each point is from the outline), so the
+   pattern stays sharp at any size. Values are in fractions of the texture, positive outside. */
+function buildShapeTexture() {
+  const N = 384, INF = 1e20, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  if (SHAPE.path) {
+    const [bx, by, bw, bh] = SHAPE.box, k = N * 0.8 / Math.max(bw, bh);
+    x.translate((N - bw * k) / 2 - bx * k, (N - bh * k) / 2 - by * k); x.scale(k, k); x.fill(new Path2D(SHAPE.path));
+  }
+  const a = x.getImageData(0, 0, N, N).data, out = new Float64Array(N * N), inn = new Float64Array(N * N);
+  for (let i = 0; i < N * N; i++) {
+    const al = a[i * 4 + 3] / 255, d = 0.5 - al;
+    out[i] = al === 1 ? 0 : al === 0 ? INF : d > 0 ? d * d : 0;
+    inn[i] = al === 1 ? INF : al === 0 ? 0 : d < 0 ? d * d : 0;
+  }
+  const f = new Float64Array(N), dd = new Float64Array(N), v = new Int32Array(N), z = new Float64Array(N + 1);
+  const pass1d = (grid, off, stride) => {
+    for (let q = 0; q < N; q++) f[q] = grid[off + q * stride];
+    let k = 0; v[0] = 0; z[0] = -INF; z[1] = INF;
+    for (let q = 1; q < N; q++) {
+      let s;
+      do { const r = v[k]; s = (f[q] + q * q - f[r] - r * r) / (2 * q - 2 * r); } while (s <= z[k] && --k > -1);
+      k++; v[k] = q; z[k] = s; z[k + 1] = INF;
+    }
+    k = 0;
+    for (let q = 0; q < N; q++) { while (z[k + 1] < q) k++; const r = v[k]; dd[q] = (q - r) * (q - r) + f[r]; }
+    for (let q = 0; q < N; q++) grid[off + q * stride] = dd[q];
+  };
+  for (const grid of [out, inn]) { for (let i = 0; i < N; i++) pass1d(grid, i, N); for (let i = 0; i < N; i++) pass1d(grid, i * N, 1); }
+  const sd = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) for (let i = 0; i < N; i++) {
+    const s = y * N + i; sd[(N - 1 - y) * N + i] = (Math.sqrt(out[s]) - Math.sqrt(inn[s])) / N;
+  }
+  const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, N, N, 0, gl.RED, gl.FLOAT, sd);
+  for (const [k, val] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, val);
+  return tex;
 }
 
 function uploadSource() {
@@ -918,6 +1018,8 @@ function draw(outW, outH) {
     gl.uniform1i(u('uOvMode'), OV_INDEX[s.overlay]); gl.uniform1i(u('uCount'), n); gl.uniform1i(u('uBlend'), BLEND_INDEX[s.blend]);
     gl.uniform3fv(u('uCol[0]'), cols); gl.uniform2fv(u('uPos[0]'), pos); gl.uniform2f(u('uOvDir'), od[0], od[1]);
     gl.uniform1f(u('uSoft'), s.soft / 100); gl.uniform1f(u('uGFlow'), s.gflow / 100 * 0.8); gl.uniform1f(u('uOpacity'), s.opacity / 100);
+    gl.uniform1f(u('uCurve'), s.curve / 100);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, shapeTex); gl.uniform1i(u('uShape'), 1); gl.activeTexture(gl.TEXTURE0);
     gl.uniform1f(u('uGrain'), s.grain / 100 * 0.4); gl.uniform1f(u('uGrainCells'), 1800 - s.grainSize / 100 * 1400);
     gl.uniform1i(u('uPat'), PAT_INDEX[s.pattern]); gl.uniform1i(u('uPatFollow'), FOLLOW_INDEX[s.patFollow]); gl.uniform1i(u('uPatBlend'), BLEND_INDEX[s.patBlend]);
     gl.uniform3fv(u('uPatCol'), hexToRgb(s.patColor));
@@ -927,7 +1029,7 @@ function draw(outW, outH) {
   });
 }
 
-let dirty = false, busy = false, peek = false;
+let dirty = false, busy = false, peek = false, hasPhoto = false;
 function invalidate() { if (dirty) return; dirty = true; requestAnimationFrame(() => { dirty = false; if (!busy && gl) draw(canvas.width, canvas.height); }); }
 
 /* ---------- Layout: fit the frame to the stage at the chosen aspect ---------- */
@@ -950,7 +1052,7 @@ function setSource(drawable, w, h, name, credit) {
   sourceCanvas.getContext('2d').drawImage(drawable, 0, 0, sourceCanvas.width, sourceCanvas.height);
   src.w = sourceCanvas.width; src.h = sourceCanvas.height;
   uploadSource(); state.cx = state.cy = .5; state.zoom = 100;
-  if (name) { $('fileName').textContent = name; Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); }
+  if (name) { hasPhoto = true; $('fileName').textContent = name; Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); }
   const cr = $('credit'); cr.hidden = !credit; cr.innerHTML = credit || '';
   syncUI(); layout();
 }
@@ -969,28 +1071,6 @@ function loadRemote(url, name, credit) {
     im.src = url;
   });
 }
-function sampleScene() {
-  const c = document.createElement('canvas'); c.width = 2400; c.height = 1600;
-  const x = c.getContext('2d'), horizon = 700;
-  let g = x.createLinearGradient(0, 0, 0, horizon);
-  g.addColorStop(0, '#c9dbe4'); g.addColorStop(.7, '#e3dcd6'); g.addColorStop(1, '#f0d3c2');
-  x.fillStyle = g; x.fillRect(0, 0, 2400, horizon);
-  g = x.createLinearGradient(0, horizon, 0, 1600);
-  g.addColorStop(0, '#3b7284'); g.addColorStop(.4, '#1f4c5d'); g.addColorStop(1, '#0c2732');
-  x.fillStyle = g; x.fillRect(0, horizon, 2400, 900);
-  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 26; i++) {
-    const y0 = horizon - 40 + i * 36 + rnd() * 20, amp = 14 + i * 3.2, f1 = .002 + rnd() * .004, f2 = .007 + rnd() * .006, ph = rnd() * 9;
-    x.beginPath(); x.moveTo(0, 1600);
-    for (let px = 0; px <= 2400; px += 12) x.lineTo(px, y0 + Math.sin(px * f1 + ph) * amp + Math.sin(px * f2 + ph * 2) * amp * .4);
-    x.lineTo(2400, 1600); x.closePath();
-    const light = rnd() > .55;
-    x.fillStyle = light ? `rgba(120,175,190,${.10 + rnd() * .14})` : `rgba(8,34,46,${.14 + rnd() * .2})`;
-    x.fill();
-  }
-  return c;
-}
-
 /* ---------- Unsplash search ---------- */
 const us = { q: '', page: 0, pages: 0, selected: null };
 function unsplashKey() {
@@ -1065,22 +1145,32 @@ async function exportImage() {
     toast(`Exported ${w} × ${h} px ${format.toUpperCase()}`);
   } catch (e) {
     toast('Export failed at this size. Try the next size down.', 6000);
-  } finally { btn.disabled = false; updateExportDim(); }
+  } finally { btn.disabled = false; updateExportDim(); syncStage(); }
 }
 
 /* ---------- UI ---------- */
 let toastTimer;
 function toast(msg, ms = 2600) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 function custom() { state.recipe = null; document.querySelectorAll('#recipes .chip[data-recipe]').forEach(c => c.setAttribute('aria-pressed', 'false')); syncStage(); }
-/* Stage messages: what is on screen, and the hold-to-compare button once a photo has been changed. */
+/* Stage messages. Until a photo is loaded the frame is an empty box that asks for one, and the
+   first chip reads Upload; after that it reads Original and takes the photo back to untouched. */
 function syncStage() {
-  const photo = state.bg === 'photo', original = state.recipe === 'Original', sample = $('fileName').textContent === 'Sample scene';
+  const photo = state.bg === 'photo', empty = photo && !hasPhoto, original = state.recipe === 'Original';
+  frame.classList.toggle('is-empty', empty); $('empty').hidden = !empty;
   const badge = $('badge');
-  badge.textContent = original ? 'Original photo · pick a recipe or adjust a control to begin' : 'Sample scene · upload or search for your own photo';
-  badge.hidden = !photo || !(original || sample);
-  $('compare').hidden = !photo || original;
+  badge.textContent = 'Original photo · pick a recipe or adjust a control to begin';
+  badge.hidden = !photo || empty || !original;
+  $('compare').hidden = !photo || empty || original;
+  const og = $('ogChip'); og.textContent = hasPhoto ? 'Original' : 'Upload'; og.setAttribute('aria-pressed', hasPhoto ? original : empty);
+  const ex = $('exportBtn'); ex.classList.toggle('idle', empty); if (!ex.textContent.startsWith('Rendering')) ex.disabled = empty;
 }
 function applyOriginal() { Object.assign(state, ORIGINAL, { bg: 'photo', recipe: 'Original' }); syncUI(); layout(); }
+/* Take the person to the photo controls and make them obvious. */
+function promptUpload() {
+  state.tab = 'image'; state.bg = 'photo'; pop.hidden = true; syncUI(); layout();
+  const box = $('bgPhoto'); box.classList.remove('nudge'); void box.offsetWidth; box.classList.add('nudge');
+  box.scrollIntoView({ block: 'center', behavior: 'smooth' }); $('pick').focus({ preventScroll: true });
+}
 function changed() { custom(); syncUI(); invalidate(); }
 
 function buildPalette(host, current, onPick) {
@@ -1093,6 +1183,7 @@ function buildPalette(host, current, onPick) {
     }
     host.appendChild(row);
   };
+  addScale(Object.values(BRAND.core), 'ten core');
   BRAND.scales.forEach(s => addScale(s.steps, 'ten')); addScale(BRAND.gray, 'twelve');
 }
 
@@ -1140,8 +1231,9 @@ function buildUI() {
     }
   }
   const rec = $('recipes');
-  const og = document.createElement('button'); og.className = 'chip'; og.textContent = 'Original'; og.dataset.recipe = 'Original';
-  og.onclick = applyOriginal; rec.appendChild(og);
+  const og = document.createElement('button'); og.className = 'chip'; og.id = 'ogChip'; og.textContent = 'Upload';
+  og.onclick = () => hasPhoto ? applyOriginal() : promptUpload(); rec.appendChild(og);
+  $('emptyBtn').onclick = promptUpload;
   const cmp = $('compare'), setPeek = on => { if (peek === on) return; peek = on; cmp.classList.toggle('on', on); $('handles').style.visibility = on ? 'hidden' : ''; invalidate(); };
   cmp.addEventListener('pointerdown', e => { e.preventDefault(); cmp.setPointerCapture(e.pointerId); setPeek(true); });
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cmp.addEventListener(t, () => setPeek(false)));
@@ -1191,7 +1283,7 @@ function buildUI() {
   LIBRARY.forEach((g, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.title = g.name; b.setAttribute('aria-label', 'Gradient: ' + g.name);
     const c = document.createElement('canvas'); c.width = 150; c.height = 100; c.id = 'lib-' + i; b.appendChild(c);
-    b.onclick = () => { Object.assign(state, { overlay: g.overlay, soft: g.soft ?? state.soft, gflow: g.gflow ?? state.gflow, ovAngle: g.ovAngle ?? state.ovAngle, stops: g.stops.map(s => ({ ...s })), selected: 0 }); changed(); };
+    b.onclick = () => { Object.assign(state, { overlay: g.overlay, soft: g.soft ?? state.soft, gflow: g.gflow ?? state.gflow, ovAngle: g.ovAngle ?? state.ovAngle, curve: g.curve ?? 0, stops: g.stops.map(s => ({ ...s })), selected: 0 }); changed(); };
     lib.appendChild(b);
   });
 }
@@ -1202,7 +1294,7 @@ function renderLibrary() {
   const keep = { ...state, stops: state.stops }; busy = true;
   LIBRARY.forEach((g, i) => {
     Object.assign(state, { bg: 'solid', bgA: gray(6), blur: 0, motion: 0, liquify: 0, grain: 0, pattern: 'off', blend: 'normal', opacity: 100,
-      overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, stops: g.stops });
+      overlay: g.overlay, soft: g.soft ?? 55, gflow: g.gflow ?? 25, ovAngle: g.ovAngle ?? 45, curve: g.curve ?? 0, stops: g.stops });
     canvas.width = 150; canvas.height = 100; draw(150, 100);
     $('lib-' + i).getContext('2d').drawImage(canvas, 0, 0);
   });
@@ -1231,13 +1323,15 @@ function syncStops() {
   }
   const sel = state.stops[state.selected], last = state.stops.length - 1;
   const role = mode === 'tone' ? (state.selected === 0 ? ' · shadows' : state.selected === last ? ' · highlights' : ' · midtones')
-    : mode === 'linear' ? (state.selected === 0 ? ' · start' : state.selected === last ? ' · end' : '') : '';
+    : mode === 'linear' ? (state.selected === 0 ? ' · start' : state.selected === last ? ' · end' : '')
+    : mode === 'fold' ? (state.selected === 0 ? ' · solid side' : state.selected === last ? ' · far end' : state.selected === 1 ? ' · at the edge' : '') : '';
   $('stopName').textContent = COLOR_NAMES[sel.c] + role;
   document.querySelectorAll('#palette .sw').forEach(sw => sw.setAttribute('aria-pressed', sw.dataset.hex === sel.c));
 
   const hh = $('handles'); hh.innerHTML = '';
-  if (mode !== 'mesh' || state.tab !== 'color' || state.bg === 'none') return;
+  if ((mode !== 'mesh' && mode !== 'fold') || state.tab !== 'color' || state.bg === 'none' || (state.bg === 'photo' && !hasPhoto)) return;
   state.stops.forEach((s, i) => {
+    if (mode === 'fold' && i !== 0 && i !== last) return;   // a fold is placed by its first and last colors only
     const h = document.createElement('div'); h.className = 'handle' + (i === state.selected ? ' active' : '');
     h.style.background = s.c; h.style.left = s.x * 100 + '%'; h.style.top = s.y * 100 + '%'; h.title = COLOR_NAMES[s.c];
     h.addEventListener('pointerdown', e => {
@@ -1245,7 +1339,7 @@ function syncStops() {
       state.selected = i;
       const rect = frame.getBoundingClientRect();
       const move = ev => {
-        s.x = clamp((ev.clientX - rect.left) / rect.width, -.15, 1.15); s.y = clamp((ev.clientY - rect.top) / rect.height, -.15, 1.15);
+        s.x = +clamp((ev.clientX - rect.left) / rect.width, -.15, 1.15).toFixed(3); s.y = +clamp((ev.clientY - rect.top) / rect.height, -.15, 1.15).toFixed(3);
         h.style.left = s.x * 100 + '%'; h.style.top = s.y * 100 + '%'; custom(); invalidate();
       };
       const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); syncStops(); };
@@ -1256,6 +1350,7 @@ function syncStops() {
 }
 
 const OV_HINTS = {
+  fold: 'A crisp edge with color fading away from it. The first color is the solid side. On the image, drag the first dot to move the edge and the last dot to set where the fade ends.',
   mesh: 'Pick a color, choose its brand shade, then drag the dots on the image to place each color.',
   linear: 'A simple blend from the first color to the last. Use Angle to turn it.',
   solid: 'One flat brand color over the image. The blend mode decides how it mixes.',
@@ -1280,7 +1375,8 @@ function syncUI() {
   syncStage();
   $('credit').hidden = !photo || !$('credit').innerHTML;
 
-  $('ovBody').hidden = s.overlay === 'off' || none; $('libBox').hidden = s.overlay === 'tone' || s.overlay === 'solid';
+  $('ovBody').hidden = none; $('libBox').hidden = s.overlay === 'tone' || s.overlay === 'solid';
+  for (const id of ['stops', 'stopName', 'palette', 'blendBox']) $(id).hidden = s.overlay === 'off';
   $('colorHint').textContent = none ? 'The color layer needs a background. Choose Photo, Solid or Two-tone on the Image tab.' : OV_HINTS[s.overlay];
   $('patBody').hidden = s.pattern === 'off';
   $('patFollowRow').hidden = s.patVary === 0;
@@ -1290,12 +1386,14 @@ function syncUI() {
   const fmt = exportFormat();
   $('format').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', b.dataset.format === fmt); b.disabled = none && b.dataset.format === 'jpg'; });
   $('formatHint').textContent = none ? 'A transparent background can only be saved as PNG.' : fmt === 'png' ? 'PNG keeps every pixel exact. Files are much larger than JPG.' : 'JPG is the right choice for most uses.';
-  $('stageNote').textContent = (photo ? 'Drag the image to reframe' : '') + (s.overlay === 'mesh' && s.tab === 'color' && !none ? (photo ? ' · ' : '') + 'Drag a dot to move its color' : '');
+  const framed = photo && hasPhoto, dots = (s.overlay === 'mesh' || s.overlay === 'fold') && s.tab === 'color' && !none && (!photo || hasPhoto);
+  $('stageNote').textContent = (framed ? 'Drag the image to reframe' : '') + (dots ? (framed ? ' · ' : '') + (s.overlay === 'fold' ? 'Drag a dot to move the edge or the fade' : 'Drag a dot to move its color') : '');
   syncStops(); updateExportDim();
 }
 
 function applyRecipe(name) {
   const r = RECIPES[name];
+  if (!hasPhoto && (r.bg ?? 'photo') === 'photo') { promptUpload(); toast('Add a photo first, then pick a recipe.'); return; }
   Object.assign(state, RECIPE_BASE, r, { stops: (r.stops || state.stops).map(s => ({ ...s })), recipe: name, selected: 0 });
   syncUI(); layout();
 }
@@ -1319,7 +1417,7 @@ function shuffle() {
 
 /* ---------- Pointer: drag the image to reframe ---------- */
 frame.addEventListener('pointerdown', e => {
-  if (e.target.classList.contains('handle') || state.bg !== 'photo') return;
+  if (e.target.classList.contains('handle') || state.bg !== 'photo' || !hasPhoto) return;
   frame.setPointerCapture(e.pointerId); frame.classList.add('panning');
   let lx = e.clientX, ly = e.clientY; const rect = frame.getBoundingClientRect();
   const move = ev => {
@@ -1340,9 +1438,9 @@ canvas.addEventListener('webglcontextrestored', () => { if (initGL()) { uploadSo
 /* ---------- Boot ---------- */
 buildUI();
 if (initGL()) {
-  Object.assign(state, RECIPE_BASE, RECIPES.Tide, { stops: RECIPES.Tide.stops.map(s => ({ ...s })) });
-  const scene = sampleScene(); setSource(scene, scene.width, scene.height, null);
-  renderLibrary(); layout();
+  uploadSource();   // placeholder until a photo is chosen
+  state.stops = LIBRARY[0].stops.map(s => ({ ...s }));
+  renderLibrary(); syncUI(); layout();
 }
 window.DreamSequence = { state, exportBlob, invalidate, loadFile, loadRemote, setSource, syncUI, searchUnsplash };
 </script>

@@ -2,7 +2,7 @@
 
 A brand graphic generator. Turn any royalty-free photograph, or a plain brand color, into abstract brand-safe imagery: blur and liquify it, lay brand color over it, add a pattern and grain, and export a high-resolution JPG or PNG.
 
-Prototype. The palette is provisional until the master brand library is finalized.
+Prototype. The palette follows the current brand colors and may still change.
 
 Live: https://ffgroup-8.github.io/melodream/
 
@@ -10,13 +10,13 @@ Live: https://ffgroup-8.github.io/melodream/
 
 Open the link, or open `index.html` in a browser (Chrome, Safari, Edge or Firefox). No install and no build step. Images you upload never leave the browser.
 
-A new photo always opens untouched, so you see it as it is before changing anything. **Recipes** along the top are complete looks, **Original** takes the photo back to untouched, and **Shuffle colors** makes a new brand-safe combination. Once a photo has been changed, press and hold **Hold to see original** above the image to compare.
+The tool opens on an empty frame that asks for a photo: **Add a photo** points to the upload and Unsplash controls, or drop an image on the frame. A new photo always opens untouched, so you see it as it is before changing anything. **Recipes** along the top are complete looks. The first chip reads **Upload** until a photo is loaded; after that it reads **Original** and takes the photo back to untouched. **Shuffle colors** makes a new brand-safe combination. Once a photo has been changed, press and hold **Hold to see original** above the image to compare.
 
 The four tabs are the layers, bottom to top:
 
 1. **Image**: the background. A photo (upload one, or search Unsplash), a solid brand color, a two-tone blend, or transparent. Pick a frame shape and drag the image to reframe it. *Dream* blurs, streaks and liquifies it, from crystal clear to fully abstract.
-2. **Color**: a brand color layer over the background. A gradient with draggable color dots, a two-tone blend, a solid color, or a tone map that recolors the image by brightness. The gradient library has ready-made starting points. The blend mode decides how color meets the image.
-3. **Pattern**: dots, lines, grid, rings, contours or notes in one brand color. *Variation* makes the shapes grow and shrink with organic noise or with the light and dark of the image.
+2. **Color**: a brand color layer over the background. A fold (a crisp or soft edge with color fading away from it), a gradient with draggable color dots, a two-tone blend, a solid color, or a tone map that recolors the image by brightness. The gradient library has twelve ready-made folds. The blend mode decides how color meets the image.
+3. **Pattern**: dots, lines, grid, rings or contours in one brand color. *Variation* makes the shapes grow and shrink with organic noise or with the light and dark of the image.
 4. **Finish**: film grain and file format.
 
 **Export** at 2400, 4000 or 6000 px on the long edge. Choose the Transparent background to export a pattern on its own as a PNG.
@@ -27,6 +27,10 @@ Search runs on a free Unsplash access key, set in `UNSPLASH_ACCESS_KEY` near the
 
 ## Change the brand palette
 
-All colors live in the `BRAND` object at the top of the script in `index.html`. Replace the hex values there and every swatch, recipe and shuffle follows. The tool cannot produce a color outside that list.
+All colors live in the `BRAND` object at the top of the script in `index.html`: `core` holds the ten brand colors and `scales` holds the shade ranges built around them. Replace the hex values there and every swatch, recipe, preset and shuffle follows. The tool cannot produce a color outside that list.
 
 Recipes live in `RECIPES` and the gradient library in `LIBRARY`, just below it.
+
+## Custom pattern shape
+
+The Pattern tab can offer one custom shape. Put an SVG path and its bounding box in `SHAPE`, near `PAT_TYPES`; leave the path empty to hide the option.
