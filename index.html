@@ -337,6 +337,7 @@
         <h2>Frame</h2>
         <div class="chips" id="aspects" style="margin-bottom:16px"></div>
         <div data-sliders="source"></div>
+        <div id="bgBehind" hidden><div data-color="bgA" data-label="Behind the image"></div></div>
         <details id="toneBox">
           <summary>Photo tone</summary>
           <div data-sliders="tone"></div>
@@ -481,9 +482,9 @@ const gray = n => BRAND.gray[n - 1];
 const core = name => BRAND.core[name];
 
 /* ---------- Recipes: full looks built only from brand colors ---------- */
-const RECIPE_BASE = { bg: 'photo', pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, curve: 0, bright: 0, contrast: 0, sat: 0 };
+const RECIPE_BASE = { bg: 'photo', photoOpacity: 100, pattern: 'off', ovAngle: 45, gflow: 25, soft: 55, curve: 0, bright: 0, contrast: 0, sat: 0 };
 /* The untouched photo: every effect off. New photos open in this state. */
-const ORIGINAL = { blur: 0, motion: 0, liquify: 0, overlay: 'off', pattern: 'off', grain: 0, bright: 0, contrast: 0, sat: 0 };
+const ORIGINAL = { photoOpacity: 100, blur: 0, motion: 0, liquify: 0, overlay: 'off', pattern: 'off', grain: 0, bright: 0, contrast: 0, sat: 0 };
 const RECIPES = {
   Tide: {
     overlay: 'mesh', blend: 'screen', opacity: 100, soft: 55, gflow: 25,
@@ -563,7 +564,10 @@ const IDEAS = ['ocean', 'moss', 'dunes', 'coral', 'ice', 'clouds'];
 
 const SLIDERS = {
   bgGrad: [ { key: 'bgAngle', label: 'Angle', min: 0, max: 360, unit: '°' } ],
-  source: [ { key: 'zoom', label: 'Zoom', min: 100, max: 300, unit: '%', show: s => s.bg === 'photo' } ],
+  source: [
+    { key: 'zoom', label: 'Zoom', min: 100, max: 300, unit: '%', show: s => s.bg === 'photo' },
+    { key: 'photoOpacity', label: 'Image opacity', min: 0, max: 100, unit: '%', show: s => s.bg === 'photo' },
+  ],
   tone: [
     { key: 'bright', label: 'Brightness', min: -100, max: 100 },
     { key: 'contrast', label: 'Contrast', min: -100, max: 100 },
@@ -598,7 +602,7 @@ const SLIDERS = {
 
 const state = {
   tab: 'image',
-  bg: 'photo', bgA: col('Blue',900), bgB: col('Teal',700), bgAngle: 45,
+  bg: 'photo', photoOpacity: 100, bgA: core('Ink'), bgB: col('Teal',700), bgAngle: 45,
   aspect: 'Original', zoom: 100, cx: .5, cy: .5,
   bright: 0, contrast: 0, sat: 0,
   blur: 55, motion: 45, angle: 60, liquify: 0, seed: 7.3,
@@ -640,7 +644,7 @@ const FRAG_BASE = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform sampler2D uSrc; uniform vec2 uCenter, uFrac, uAsp, uBgDir;
-uniform float uBright, uContrast, uSat; uniform int uBg; uniform vec3 uBgA, uBgB;
+uniform float uBright, uContrast, uSat, uPhoto; uniform int uBg; uniform vec3 uBgA, uBgB;
 ${OKLAB}
 void main(){
   vec3 c;
@@ -650,6 +654,7 @@ void main(){
     c = (c - 0.5) * (1.0 + uContrast) + 0.5;
     float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
     c = mix(vec3(l), c, 1.0 + uSat);
+    c = mix(oklab2rgb(uBgA), clamp(c, 0.0, 1.0), uPhoto);   // image opacity: fade the photo into the color behind it
   } else if (uBg == 1) {
     c = oklab2rgb(uBgA);
   } else {
@@ -987,7 +992,7 @@ function draw(outW, outH) {
     const [fx, fy] = visibleFrac(), bd = dirOf(s.bgAngle);
     pass(progs.base, cur, ww, wh, srcTex, u => {
       gl.uniform1i(u('uSrc'), 0); gl.uniform2f(u('uCenter'), s.cx, s.cy); gl.uniform2f(u('uFrac'), fx, fy);
-      gl.uniform1f(u('uBright'), s.bright / 100); gl.uniform1f(u('uContrast'), s.contrast / 100); gl.uniform1f(u('uSat'), s.sat / 100);
+      gl.uniform1f(u('uBright'), s.bright / 100); gl.uniform1f(u('uContrast'), s.contrast / 100); gl.uniform1f(u('uSat'), s.sat / 100); gl.uniform1f(u('uPhoto'), s.photoOpacity / 100);
       gl.uniform1i(u('uBg'), s.bg === 'photo' ? 0 : s.bg === 'solid' ? 1 : 2);
       gl.uniform3fv(u('uBgA'), hexToOklab(s.bgA)); gl.uniform3fv(u('uBgB'), hexToOklab(s.bgB));
       gl.uniform2f(u('uAsp'), aspX, aspY); gl.uniform2f(u('uBgDir'), bd[0], bd[1]);
@@ -1226,6 +1231,7 @@ function buildUI() {
       input.addEventListener('input', () => {
         state[d.key] = +input.value; $('o-' + d.key).textContent = input.value + (d.unit || '');
         if (d.key === 'zoom') clampCenter(); else custom();
+        if (d.key === 'photoOpacity') $('bgBehind').hidden = state.photoOpacity === 100;
         invalidate();
       });
     }
@@ -1371,7 +1377,7 @@ function syncUI() {
     $(id).querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.value === s[key]));
 
   $('bgPhoto').hidden = !photo; $('bgSolid').hidden = s.bg !== 'solid'; $('bgLinear').hidden = s.bg !== 'linear'; $('bgNone').hidden = !none;
-  $('toneBox').hidden = !photo; $('dreamGroup').hidden = none || s.bg === 'solid';
+  $('toneBox').hidden = !photo; $('bgBehind').hidden = !photo || s.photoOpacity === 100; $('dreamGroup').hidden = none || s.bg === 'solid';
   syncStage();
   $('credit').hidden = !photo || !$('credit').innerHTML;
 
